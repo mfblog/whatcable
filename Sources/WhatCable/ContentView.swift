@@ -229,6 +229,9 @@ struct ContentView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
+            ForEach(Array(PluginRegistry.shared.headerButtonBuilders.enumerated()), id: \.offset) { _, builder in
+                builder()
+            }
             Button {
                 refresh.bump()
             } label: {

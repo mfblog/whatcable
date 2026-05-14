@@ -113,10 +113,19 @@ public final class PowerSourceWatcher: ObservableObject {
     }
 
     private func parseOptions(_ value: Any?) -> [PowerOption] {
-        // CF arrays from IOKit don't always bridge cleanly to [Any] in Swift.
-        // Cast to NSArray and iterate — that's the reliable path.
-        guard let arr = value as? NSArray else { return [] }
-        return arr.compactMap { parseOption($0) }
+        // IOKit publishes PowerSourceOptions as an __NSCFSet (CF set), not
+        // an NSArray. ioreg renders it as "[{...}]" which looks like an
+        // array, but the actual CF type is a set. Handle both.
+        let items: [Any]
+        if let set = value as? NSSet {
+            items = set.allObjects
+        } else if let arr = value as? NSArray {
+            items = arr.compactMap { $0 }
+        } else {
+            return []
+        }
+        return items.compactMap { parseOption($0) }
+            .sorted { $0.maxPowerMW > $1.maxPowerMW }
     }
 
     private func parseOption(_ value: Any?) -> PowerOption? {

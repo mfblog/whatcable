@@ -22,6 +22,11 @@ public final class PluginRegistry {
         nsMenuItemBuilders[placement, default: []].append(nsMenuItemBuilder)
     }
 
+    public private(set) var headerButtonBuilders: [() -> AnyView] = []
+    public func register(headerButton: @escaping () -> AnyView) {
+        headerButtonBuilders.append(headerButton)
+    }
+
     public private(set) var portCardTrailingBuilders: [(PortCardContext) -> AnyView?] = []
     public func register(portCardTrailing: @escaping (PortCardContext) -> AnyView?) {
         portCardTrailingBuilders.append(portCardTrailing)

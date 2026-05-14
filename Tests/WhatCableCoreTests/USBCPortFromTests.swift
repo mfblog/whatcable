@@ -261,4 +261,75 @@ final class USBCPortFromTests: XCTestCase {
         ))
         XCTAssertEqual(port.busIndex, 5)
     }
+
+    // MARK: - portKey disambiguation
+
+    /// USB-C and MagSafe ports sharing the same portNumber must produce
+    /// different portKey values. Without this, the diagnostic view can
+    /// show data for the wrong port.
+    func testPortKeyDisambiguatesUSBCAndMagSafe() {
+        let usbC = USBCPort(
+            id: 1,
+            serviceName: "Port-USB-C@1",
+            className: "AppleHPMInterfaceType10",
+            portDescription: "Port-USB-C@1",
+            portTypeDescription: "USB-C",
+            portNumber: 1,
+            connectionActive: true,
+            activeCable: nil, opticalCable: nil, usbActive: nil,
+            superSpeedActive: nil, usbModeType: nil, usbConnectString: nil,
+            transportsSupported: [], transportsActive: [], transportsProvisioned: [],
+            plugOrientation: nil, plugEventCount: nil, connectionCount: nil,
+            overcurrentCount: nil, pinConfiguration: [:], powerCurrentLimits: [],
+            firmwareVersion: nil, bootFlagsHex: nil,
+            rawProperties: ["PortType": "2"]
+        )
+
+        let magSafe = USBCPort(
+            id: 2,
+            serviceName: "Port-MagSafe 3@1",
+            className: "AppleHPMInterfaceType11",
+            portDescription: "Port-MagSafe 3@1",
+            portTypeDescription: "MagSafe 3",
+            portNumber: 1,
+            connectionActive: true,
+            activeCable: nil, opticalCable: nil, usbActive: nil,
+            superSpeedActive: nil, usbModeType: nil, usbConnectString: nil,
+            transportsSupported: [], transportsActive: ["CC"], transportsProvisioned: [],
+            plugOrientation: nil, plugEventCount: nil, connectionCount: nil,
+            overcurrentCount: nil, pinConfiguration: [:], powerCurrentLimits: [],
+            firmwareVersion: nil, bootFlagsHex: nil,
+            rawProperties: [:]
+        )
+
+        // Both have portNumber 1, but portKey must differ.
+        XCTAssertEqual(usbC.portNumber, magSafe.portNumber)
+        XCTAssertNotEqual(usbC.portKey, magSafe.portKey,
+            "USB-C and MagSafe with same portNumber must have different portKeys")
+
+        // Verify the expected formats: USB-C uses PortType 2, MagSafe uses 0x11 (17).
+        XCTAssertEqual(usbC.portKey, "2/1")
+        XCTAssertEqual(magSafe.portKey, "17/1")
+    }
+
+    /// A port with no portNumber should return nil portKey.
+    func testPortKeyNilWhenNoPortNumber() {
+        let port = USBCPort(
+            id: 1,
+            serviceName: "Port-USB-C@1",
+            className: "AppleHPMInterfaceType10",
+            portDescription: nil,
+            portTypeDescription: "USB-C",
+            portNumber: nil,
+            connectionActive: nil,
+            activeCable: nil, opticalCable: nil, usbActive: nil,
+            superSpeedActive: nil, usbModeType: nil, usbConnectString: nil,
+            transportsSupported: [], transportsActive: [], transportsProvisioned: [],
+            plugOrientation: nil, plugEventCount: nil, connectionCount: nil,
+            overcurrentCount: nil, pinConfiguration: [:], powerCurrentLimits: [],
+            firmwareVersion: nil, bootFlagsHex: nil,
+            rawProperties: [:]
+        )
+        XCTAssertNil(port.portKey)
+    }
 }
