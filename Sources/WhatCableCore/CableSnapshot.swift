@@ -1,15 +1,73 @@
 import Foundation
 
-/// External power adapter info. Populated by the Darwin backend from IOKit.
-public struct AdapterInfo: Hashable {
+/// One voltage/current combo from the charger's HVC (High Voltage Charging)
+/// menu. This is what the charger advertises it can deliver at the system
+/// level, read from `IOPSCopyExternalPowerAdapterDetails()`. Distinct from
+/// `PowerOption` (which is the per-port USB-PD negotiation result).
+public struct AdapterHVCEntry: Hashable, Sendable {
+    /// Voltage in millivolts (e.g. 20000 for 20V).
+    public let voltageMV: Int
+    /// Maximum current in milliamps (e.g. 4990 for ~5A).
+    public let currentMA: Int
+
+    public init(voltageMV: Int, currentMA: Int) {
+        self.voltageMV = voltageMV
+        self.currentMA = currentMA
+    }
+
+    /// Watts this entry can deliver (voltage * current).
+    public var wattsInt: Int {
+        Int((Double(voltageMV) * Double(currentMA) / 1_000_000).rounded())
+    }
+
+    public var label: String {
+        let v = String(format: "%.0fV", Double(voltageMV) / 1000)
+        let a = String(format: "%.2fA", Double(currentMA) / 1000)
+        return "\(v)/\(a)"
+    }
+}
+
+/// External power adapter info. Populated by the Darwin backend from
+/// `IOPSCopyExternalPowerAdapterDetails()`. This is a system-wide view
+/// of the connected charger brick, not a per-port reading.
+public struct AdapterInfo: Hashable, Sendable {
     public let watts: Int?
     public let isCharging: Bool?
     public let source: String?  // "AC" / "Battery" / nil
+    /// Negotiated adapter voltage in millivolts (e.g. 20000 for 20V).
+    public let voltageMV: Int?
+    /// Negotiated adapter current in milliamps (e.g. 4990 for ~5A).
+    public let currentMA: Int?
+    /// Short description from IOKit, e.g. "pd charger" or "magsafe charger".
+    public let adapterDescription: String?
+    /// Apple's internal power tier classification (e.g. 2 for 100W).
+    public let powerTier: Int?
+    /// True when the adapter is wireless (MagSafe pad, etc.).
+    public let isWireless: Bool?
+    /// The charger's HVC (High Voltage Charging) menu: all voltage/current
+    /// combos the charger says it can deliver. Empty when not available.
+    public let hvcMenu: [AdapterHVCEntry]
 
-    public init(watts: Int?, isCharging: Bool?, source: String?) {
+    public init(
+        watts: Int?,
+        isCharging: Bool?,
+        source: String?,
+        voltageMV: Int? = nil,
+        currentMA: Int? = nil,
+        adapterDescription: String? = nil,
+        powerTier: Int? = nil,
+        isWireless: Bool? = nil,
+        hvcMenu: [AdapterHVCEntry] = []
+    ) {
         self.watts = watts
         self.isCharging = isCharging
         self.source = source
+        self.voltageMV = voltageMV
+        self.currentMA = currentMA
+        self.adapterDescription = adapterDescription
+        self.powerTier = powerTier
+        self.isWireless = isWireless
+        self.hvcMenu = hvcMenu
     }
 }
 

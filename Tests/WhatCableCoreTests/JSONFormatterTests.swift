@@ -637,6 +637,84 @@ final class JSONFormatterTests: XCTestCase {
         XCTAssertEqual(trmArr[0]["state"] as? Int, 2)
     }
 
+    // MARK: - Adapter DTO
+
+    func testAdapterDTOAppearsWithFullDetails() throws {
+        let adapter = AdapterInfo(
+            watts: 100,
+            isCharging: nil,
+            source: "AC",
+            voltageMV: 20000,
+            currentMA: 4990,
+            adapterDescription: "pd charger",
+            powerTier: 2,
+            isWireless: false,
+            hvcMenu: [
+                AdapterHVCEntry(voltageMV: 5000, currentMA: 2960),
+                AdapterHVCEntry(voltageMV: 9000, currentMA: 2980),
+                AdapterHVCEntry(voltageMV: 15000, currentMA: 2990),
+                AdapterHVCEntry(voltageMV: 20000, currentMA: 4990),
+            ]
+        )
+        let json = try JSONFormatter.render(
+            ports: [], sources: [], identities: [], showRaw: false,
+            adapter: adapter
+        )
+        let obj = parse(json)
+        let dto = try XCTUnwrap(obj["adapter"] as? [String: Any])
+        XCTAssertEqual(dto["watts"] as? Int, 100)
+        XCTAssertEqual(dto["source"] as? String, "AC")
+        XCTAssertEqual(dto["voltageMV"] as? Int, 20000)
+        XCTAssertEqual(dto["currentMA"] as? Int, 4990)
+        XCTAssertEqual(dto["description"] as? String, "pd charger")
+        XCTAssertEqual(dto["powerTier"] as? Int, 2)
+        XCTAssertEqual(dto["isWireless"] as? Bool, false)
+
+        let hvc = try XCTUnwrap(dto["hvcMenu"] as? [[String: Any]])
+        XCTAssertEqual(hvc.count, 4)
+        XCTAssertEqual(hvc[0]["voltageMV"] as? Int, 5000)
+        XCTAssertEqual(hvc[0]["currentMA"] as? Int, 2960)
+        XCTAssertEqual(hvc[3]["voltageMV"] as? Int, 20000)
+        XCTAssertEqual(hvc[3]["currentMA"] as? Int, 4990)
+    }
+
+    func testAdapterDTONilWhenNoAdapter() throws {
+        let json = try JSONFormatter.render(
+            ports: [], sources: [], identities: [], showRaw: false,
+            adapter: nil
+        )
+        let obj = parse(json)
+        // adapter key should be absent or null
+        XCTAssertNil(obj["adapter"] as? [String: Any])
+    }
+
+    func testAdapterDTOMinimalFields() throws {
+        let adapter = AdapterInfo(watts: 30, isCharging: nil, source: "AC")
+        let json = try JSONFormatter.render(
+            ports: [], sources: [], identities: [], showRaw: false,
+            adapter: adapter
+        )
+        let obj = parse(json)
+        let dto = try XCTUnwrap(obj["adapter"] as? [String: Any])
+        XCTAssertEqual(dto["watts"] as? Int, 30)
+        XCTAssertEqual(dto["source"] as? String, "AC")
+        // New fields should be null/absent when not provided
+        XCTAssertNil(dto["voltageMV"] as? Int)
+        XCTAssertNil(dto["hvcMenu"] as? [[String: Any]])
+    }
+
+    func testAdapterDTOHVCMenuOmittedWhenEmpty() throws {
+        let adapter = AdapterInfo(watts: 30, isCharging: nil, source: "AC", hvcMenu: [])
+        let json = try JSONFormatter.render(
+            ports: [], sources: [], identities: [], showRaw: false,
+            adapter: adapter
+        )
+        let obj = parse(json)
+        let dto = try XCTUnwrap(obj["adapter"] as? [String: Any])
+        // Empty HVC menu should be null, not an empty array
+        XCTAssertNil(dto["hvcMenu"] as? [[String: Any]])
+    }
+
     func testPortDtoCarriesThunderboltSwitchUidReference() throws {
         let host = ThunderboltSwitch(
             id: 12345,

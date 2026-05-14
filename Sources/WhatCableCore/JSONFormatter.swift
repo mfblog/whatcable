@@ -16,6 +16,7 @@ public enum JSONFormatter {
         let output = Output(
             version: AppInfo.version,
             isDesktopMac: isDesktopMac,
+            adapter: adapter.map { AdapterDTO(adapter: $0) },
             ports: ports.map { port in
                 PortDTO(
                     port: port,
@@ -41,6 +42,9 @@ public enum JSONFormatter {
 private struct Output: Codable {
     let version: String
     let isDesktopMac: Bool
+    /// System-wide charger info from `IOPSCopyExternalPowerAdapterDetails`.
+    /// Nil when no adapter is connected (running on battery).
+    let adapter: AdapterDTO?
     let ports: [PortDTO]
     /// Top-level Thunderbolt fabric. Always present (empty array on
     /// machines without a TB controller, or before the watcher has data).
@@ -433,4 +437,35 @@ private struct ChargingDTO: Codable {
         case .fine: self.bottleneck = "fine"
         }
     }
+}
+
+/// System-wide charger info from IOPSCopyExternalPowerAdapterDetails.
+private struct AdapterDTO: Codable {
+    let watts: Int?
+    let source: String?
+    let voltageMV: Int?
+    let currentMA: Int?
+    let description: String?
+    let powerTier: Int?
+    let isWireless: Bool?
+    /// The charger's HVC menu: every voltage/current combo it supports.
+    let hvcMenu: [AdapterHVCEntryDTO]?
+
+    init(adapter: AdapterInfo) {
+        self.watts = adapter.watts
+        self.source = adapter.source
+        self.voltageMV = adapter.voltageMV
+        self.currentMA = adapter.currentMA
+        self.description = adapter.adapterDescription
+        self.powerTier = adapter.powerTier
+        self.isWireless = adapter.isWireless
+        self.hvcMenu = adapter.hvcMenu.isEmpty ? nil : adapter.hvcMenu.map {
+            AdapterHVCEntryDTO(voltageMV: $0.voltageMV, currentMA: $0.currentMA)
+        }
+    }
+}
+
+private struct AdapterHVCEntryDTO: Codable {
+    let voltageMV: Int
+    let currentMA: Int
 }
