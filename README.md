@@ -222,6 +222,14 @@ Built by [Darryl Morley](https://github.com/darrylmorley).
 - [@Vardan933](https://github.com/Vardan933) - Armenian translation
 - [@abrauchli](https://github.com/abrauchli) - screenshot fix
 - [@durul](https://github.com/durul) - updater security audit
+- [@Jonty](https://github.com/Jonty) - window/Dock mode request
+- [@ineiti](https://github.com/ineiti) - Quit button request
+- [@nervous-inhuman](https://github.com/nervous-inhuman) - USB device matching and port state bug reports
+- [@hgschmie](https://github.com/hgschmie) - e-marker and Thunderbolt cable documentation that led to e-marker detection
+- [@joeshaw](https://github.com/joeshaw) - dual power source bug report, Thunderbolt data samples
+- [@jlbyrne-76](https://github.com/jlbyrne-76) - M4 Mac Mini front port e-marker bug report, cable reports
+- [@stevetrease](https://github.com/stevetrease) - M3 and M4 ioreg dumps, TB3 data samples
+- [@jshier](https://github.com/jshier) - M3 Ultra Thunderbolt data, AppleSmartBattery dumps
 - [@NoFr1ends](https://github.com/NoFr1ends) - TB5 hardware confirmation (JHL9580 dock, M5 Pro)
 
 **Sponsors:**
