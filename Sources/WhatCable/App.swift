@@ -40,6 +40,12 @@ struct WhatCableApp: App {
                         Button(item.title) { item.action() }
                     }
                 }
+                CommandGroup(after: .toolbar) {
+                    Button(String(localized: "Refresh", bundle: _appLocalizedBundle)) {
+                        delegate.menuRefresh()
+                    }
+                    .keyboardShortcut("r", modifiers: .command)
+                }
                 CommandGroup(replacing: .help) {
                     Button(String(localized: "WhatCable on GitHub", bundle: _appLocalizedBundle)) {
                         NSWorkspace.shared.open(AppInfo.helpURL)
@@ -74,6 +80,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
     private var cancellables: Set<AnyCancellable> = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NSWindow.allowsAutomaticWindowTabbing = false
+
         // Override the process name so the About panel and menus use the
         // app name even though the SwiftPM executable name might differ.
         ProcessInfo.processInfo.setValue(AppInfo.name, forKey: "processName")
@@ -232,7 +240,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         popover?.behavior = isPinned ? .applicationDefined : .transient
     }
 
-    @objc private func menuRefresh() {
+    @objc func menuRefresh() {
         Self.refreshSignal.bump()
     }
 

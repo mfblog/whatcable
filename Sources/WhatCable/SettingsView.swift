@@ -90,11 +90,11 @@ struct SettingsForm: View {
 
     @ViewBuilder
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(title.uppercased())
                 .scaledFont(.caption, weight: .semibold)
                 .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 content()
             }
             .scaledFont(.body)
