@@ -123,6 +123,14 @@ if [[ -d "${APP_RESOURCES_SRC}" ]]; then
     cp -R "${APP_RESOURCES_SRC}/." "${bundle_path}/"
 fi
 
+# macOS needs .lproj directories at the app bundle root to recognize
+# supported languages. The actual strings live in the SPM sub-bundles,
+# but without these markers the system won't select the right locale.
+for lproj in "${APP_RESOURCES_SRC}"/*.lproj; do
+    [[ -d "${lproj}" ]] || continue
+    mkdir -p "${RESOURCES_DIR}/$(basename "${lproj}")"
+done
+
 echo "==> Verifying universal binaries"
 lipo -archs "${MACOS_DIR}/${APP_NAME}" | sed 's/^/    app: /'
 lipo -archs "${HELPERS_DIR}/${CLI_BIN_NAME}" | sed 's/^/    cli: /'
@@ -164,8 +172,14 @@ cat > "${CONTENTS_DIR}/Info.plist" <<PLIST
     <key>CFBundleLocalizations</key>
     <array>
         <string>en</string>
+        <string>de</string>
+        <string>es</string>
+        <string>fr</string>
+        <string>hi</string>
         <string>hy</string>
         <string>it</string>
+        <string>ja</string>
+        <string>nb</string>
         <string>pl</string>
         <string>zh-Hans</string>
     </array>
