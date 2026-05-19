@@ -89,3 +89,12 @@
 "What is collected" = "Hva som samles inn";
 "WhatCable runs 13 IOKit probes that read raw USB-C and Thunderbolt data from your Mac's port controller registers. The results are sent to a secure server to help improve cable and port detection." = "WhatCable kjører 13 IOKit-prober som leser rå USB-C- og Thunderbolt-data fra portkontrollerregistrene på Macen din. Resultatene sendes til en sikker server for å bidra til bedre gjenkjenning av kabler og porter.";
 "Your machine's hardware UUID is hashed with SHA-256 before sending. No names, accounts, serial numbers, or personal data are collected or stored." = "Maskinens hardware-UUID hashes med SHA-256 før sending. Ingen navn, kontoer, serienumre eller personopplysninger samles inn eller lagres.";
+
+/* Negotiation diagnostics + Pro UX (PR #55). English; non-English to be refined by the community translation flow. */
+"Back" = "Back";
+"Unpin (popover closes when you click away)" = "Unpin (popover closes when you click away)";
+"Open in a separate window" = "Open in a separate window";
+"Power Monitor" = "Power Monitor";
+"Negotiation Diagnostics" = "Negotiation Diagnostics";
+"Cable Diagnostics" = "Cable Diagnostics";
+"%@ Port %lld Diagnostics" = "%@ Port %lld Diagnostics";

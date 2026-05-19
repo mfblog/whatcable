@@ -355,7 +355,10 @@ extension PortSummary {
         } else if chargingSource != nil, batteryFullyCharged == true {
             self.status = .batteryFull
             self.headline = String(localized: "Plugged in · battery full", bundle: _coreLocalizedBundle)
-            self.subtitle = String(localized: "Charger connected. Battery is full, so the Mac isn't drawing power.", bundle: _coreLocalizedBundle)
+            // Battery-full state is shown by the charging banner instead,
+            // so the subtitle here would just repeat it. Left empty; the
+            // render sites skip an empty subtitle.
+            self.subtitle = ""
         } else if chargingSource != nil {
             self.status = .charging
             if let w = chargerW {
@@ -367,7 +370,10 @@ extension PortSummary {
         } else if active.isEmpty && supported.contains("USB2"), batteryFullyCharged == true {
             self.status = .batteryFull
             self.headline = String(localized: "Plugged in · battery full", bundle: _coreLocalizedBundle)
-            self.subtitle = String(localized: "Charger connected. Battery is full, so the Mac isn't drawing power.", bundle: _coreLocalizedBundle)
+            // Battery-full state is shown by the charging banner instead,
+            // so the subtitle here would just repeat it. Left empty; the
+            // render sites skip an empty subtitle.
+            self.subtitle = ""
         } else if active.isEmpty && supported.contains("USB2") {
             self.status = .charging
             self.headline = String(localized: "Charging only", bundle: _coreLocalizedBundle)

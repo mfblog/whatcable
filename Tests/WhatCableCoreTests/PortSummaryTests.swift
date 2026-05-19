@@ -127,7 +127,9 @@ struct PortSummaryTests {
         )
         #expect(summary.status == .batteryFull)
         #expect(summary.headline == "Plugged in · battery full")
-        #expect(summary.subtitle == "Charger connected. Battery is full, so the Mac isn't drawing power.")
+        // Subtitle is now empty: the battery-full explanation lives in the
+        // charging banner instead, so the two don't repeat each other.
+        #expect(summary.subtitle.isEmpty)
     }
 
     @Test("Battery full overrides the 'Charging only' state")

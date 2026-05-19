@@ -176,6 +176,41 @@ struct ChargingDiagnosticTests {
         #expect(diag!.isWarning == false)
     }
 
+    @Test("Battery full: banner says 'not charging', not 'charging well'")
+    func batteryFull_BannerSaysNotCharging() {
+        // Same as "Everything matched" but the battery is full. The banner
+        // is the single place that explains it (PortSummary drops its
+        // redundant battery-full subtitle), so it must still appear here.
+        let diag = ChargingDiagnostic(
+            port: port,
+            sources: [usbPD(maxW: 96, winningW: 96)],
+            identities: [cableIdentity(watts: 100)],
+            batteryFullyCharged: true
+        )
+        guard case .fine(let n) = diag?.bottleneck else {
+            Issue.record("expected .fine, got \(String(describing: diag?.bottleneck))")
+            return
+        }
+        #expect(n == 96)
+        #expect(diag!.isWarning == false)
+        #expect(diag!.summary == "Battery full, not charging")
+    }
+
+    @Test("Battery not full: still 'charging well'")
+    func batteryNotFull_ChargingWell() {
+        let diag = ChargingDiagnostic(
+            port: port,
+            sources: [usbPD(maxW: 96, winningW: 96)],
+            identities: [cableIdentity(watts: 100)],
+            batteryFullyCharged: false
+        )
+        guard case .fine = diag?.bottleneck else {
+            Issue.record("expected .fine, got \(String(describing: diag?.bottleneck))")
+            return
+        }
+        #expect(diag!.summary == "Charging well at 96W")
+    }
+
     @Test("No cable e-marker, fine if matched")
     func noCableEmarker_FineIfMatched() {
         // Charger advertises 60W, Mac negotiates 60W, no cable identity.

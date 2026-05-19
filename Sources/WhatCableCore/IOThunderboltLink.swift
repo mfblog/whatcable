@@ -38,6 +38,20 @@ public enum LinkGeneration: Hashable {
         }
     }
 
+    /// Headline full-link Gb/s for the known cases (TB3 / TB4 / USB4 v1 =
+    /// 40, TB5 / USB4 v2 = 80). `nil` for `.unknown`. These are the
+    /// published symmetric link speeds, used by `DataLinkDiagnostic` as the
+    /// active Thunderbolt data rate. Asymmetric mode (TB5 120/40) and
+    /// trained-down lane widths are deliberately not modelled here.
+    public var totalGbps: Double? {
+        switch self {
+        case .tb3: return 40
+        case .usb4Tb4: return 40
+        case .tb5: return 80
+        case .unknown: return nil
+        }
+    }
+
     /// Build from a raw `Current Link Speed` register value.
     /// `0` (idle) returns `nil`; the caller treats that as "no link".
     public static func from(rawSpeedCode: UInt8) -> LinkGeneration? {

@@ -82,6 +82,10 @@ private struct PortDTO: Codable {
     let cable: CableDTO?
     let device: DeviceDTO?
     let charging: ChargingDTO?
+    /// Data-speed "weakest link" verdict: which of cable / Mac port /
+    /// device limits the negotiated data rate. Nil when there's no data
+    /// link to judge on this port.
+    let dataLink: DataLinkDTO?
     /// UID of the host root Thunderbolt switch this port maps to, if any.
     /// Resolved via the `Socket ID` <-> `@N` join key. Encoded as Int64
     /// (signed, matching IOKit's representation; some vendors use the
@@ -163,8 +167,17 @@ private struct PortDTO: Codable {
         let partner = identities.first { $0.endpoint == .sop }
         self.device = partner.map { DeviceDTO(identity: $0) }
 
-        self.charging = ChargingDiagnostic(port: port, sources: sources, identities: identities, adapter: adapter, wattageSource: chargerWattageSource)
+        self.charging = ChargingDiagnostic(port: port, sources: sources, identities: identities, adapter: adapter, wattageSource: chargerWattageSource, batteryFullyCharged: batteryFullyCharged)
             .map { ChargingDTO(diagnostic: $0) }
+
+        self.dataLink = DataLinkDiagnostic(
+            port: port,
+            identities: identities,
+            devices: usbDevices,
+            usb3Transports: usb3Transports,
+            cio: cioCapability,
+            thunderboltSwitches: thunderboltSwitches
+        ).map { DataLinkDTO(diagnostic: $0) }
 
         self.trm = trmTransports.isEmpty ? nil : trmTransports.map { TRMTransportDTO(transport: $0) }
         self.cio = cioCapability.map { CIOCableCapabilityDTO(capability: $0) }
@@ -482,6 +495,31 @@ private struct ChargingDTO: Codable {
         case .cableLimit: self.bottleneck = "cableLimit"
         case .macLimit: self.bottleneck = "macLimit"
         case .fine: self.bottleneck = "fine"
+        }
+    }
+}
+
+private struct DataLinkDTO: Codable {
+    let summary: String
+    let detail: String
+    let bottleneck: String
+    let isWarning: Bool
+    /// True when the cable e-marker and the Thunderbolt controller
+    /// disagree about the cable's speed (issue #111).
+    let cableSignalConflict: Bool
+
+    init(diagnostic: DataLinkDiagnostic) {
+        self.summary = diagnostic.summary
+        self.detail = diagnostic.detail
+        self.isWarning = diagnostic.isWarning
+        self.cableSignalConflict = diagnostic.cableSignalConflict
+        switch diagnostic.bottleneck {
+        case .fine: self.bottleneck = "fine"
+        case .cableLimit: self.bottleneck = "cableLimit"
+        case .hostLimit: self.bottleneck = "hostLimit"
+        case .deviceLimit: self.bottleneck = "deviceLimit"
+        case .degraded: self.bottleneck = "degraded"
+        case .unknownCable: self.bottleneck = "unknownCable"
         }
     }
 }

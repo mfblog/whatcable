@@ -84,7 +84,9 @@ public enum TextFormatter {
 
         let headlineColor = color(for: summary.status)
         out += ANSI.wrap(ANSI.bold + headlineColor, summary.headline) + "\n"
-        out += ANSI.wrap(ANSI.dim, summary.subtitle) + "\n"
+        if !summary.subtitle.isEmpty {
+            out += ANSI.wrap(ANSI.dim, summary.subtitle) + "\n"
+        }
 
         if !summary.bullets.isEmpty {
             out += "\n"
@@ -93,10 +95,23 @@ public enum TextFormatter {
             }
         }
 
-        if let diag = ChargingDiagnostic(port: port, sources: sources, identities: identities, adapter: adapter, wattageSource: chargerWattageSource) {
+        if let diag = ChargingDiagnostic(port: port, sources: sources, identities: identities, adapter: adapter, wattageSource: chargerWattageSource, batteryFullyCharged: batteryFullyCharged) {
             let diagColor = diag.isWarning ? ANSI.yellow : ANSI.green
             out += "\n" + ANSI.wrap(ANSI.bold, String(localized: "Charging: ", bundle: _coreLocalizedBundle)) + ANSI.wrap(diagColor, diag.summary) + "\n"
             out += "  " + ANSI.wrap(ANSI.dim, diag.detail) + "\n"
+        }
+
+        if let dataDiag = DataLinkDiagnostic(
+            port: port,
+            identities: identities,
+            devices: usbDevices,
+            usb3Transports: usb3Transports,
+            cio: cioCapability,
+            thunderboltSwitches: thunderboltSwitches
+        ) {
+            let dataColor = dataDiag.isWarning ? ANSI.yellow : ANSI.green
+            out += "\n" + ANSI.wrap(ANSI.bold, "Data: ") + ANSI.wrap(dataColor, dataDiag.summary) + "\n"
+            out += "  " + ANSI.wrap(ANSI.dim, dataDiag.detail) + "\n"
         }
 
         // Cable trust signals: hedged flags raised against the e-marker.

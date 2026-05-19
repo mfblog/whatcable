@@ -29,7 +29,8 @@ extension ChargingDiagnostic {
         sources: [PowerSource],
         identities: [USBPDSOP],
         adapter: AdapterInfo? = nil,
-        wattageSource: ChargerWattageSource = .unknown
+        wattageSource: ChargerWattageSource = .unknown,
+        batteryFullyCharged: Bool? = nil
     ) {
         guard let source = PowerSource.preferredChargingSource(in: sources) else {
             return nil
@@ -84,8 +85,15 @@ extension ChargingDiagnostic {
             self.detail = String(localized: "Both the charger and cable can do more, but the Mac is currently asking for less. This is normal once the battery is mostly full, or when the system is idle.", bundle: _coreLocalizedBundle)
         } else if let n = negotiatedW {
             self.bottleneck = .fine(negotiatedW: n)
-            self.summary = String(localized: "Charging well at \(n)W", bundle: _coreLocalizedBundle)
-            self.detail = String(localized: "Charger and cable are well-matched.", bundle: _coreLocalizedBundle)
+            if batteryFullyCharged == true {
+                // The battery-full state is shown here (the banner), not
+                // in the PortSummary subtitle, so the two don't repeat.
+                self.summary = String(localized: "Battery full, not charging", bundle: _coreLocalizedBundle)
+                self.detail = String(localized: "Charger and cable are fine. The Mac will draw up to \(n)W when it needs to.", bundle: _coreLocalizedBundle)
+            } else {
+                self.summary = String(localized: "Charging well at \(n)W", bundle: _coreLocalizedBundle)
+                self.detail = String(localized: "Charger and cable are well-matched.", bundle: _coreLocalizedBundle)
+            }
         } else if isAdapterFallback {
             self.bottleneck = .chargerLimit(chargerW: chargerMaxW)
             self.summary = String(localized: "System reports charger at \(chargerMaxW)W", bundle: _coreLocalizedBundle)

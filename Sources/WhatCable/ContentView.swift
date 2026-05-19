@@ -87,14 +87,36 @@ struct ContentView: View {
         settings.showTechnicalDetails || refresh.optionHeld
     }
 
-    var body: some View {
-        Group {
-            if refresh.showSettings {
-                SettingsView(dismiss: { refresh.showSettings = false })
-            } else {
-                mainContent
+    @ViewBuilder
+    private var rootContent: some View {
+        if let route = refresh.activeProScreen,
+           let screen = PluginRegistry.shared.proScreen(id: route.id, portCard: route.portCard) {
+            ProScreenContainer(
+                isMenuBarMode: settings.useMenuBarMode,
+                isPinned: refresh.keepOpen,
+                onTogglePin: { refresh.keepOpen.toggle() },
+                onBack: { refresh.activeProScreen = nil },
+                onDetach: {
+                    DetachedProWindowManager.shared.open(route: route)
+                    refresh.activeProScreen = nil
+                }
+            ) {
+                screen
             }
+        } else if refresh.showSettings {
+            SettingsView(dismiss: { refresh.showSettings = false })
+        } else {
+            mainContent
         }
+    }
+
+    var body: some View {
+        rootContent
+        // Width: wide enough for the widest Pro screen's own minWidth
+        // (Negotiation 560, Power Monitor 520, Cable Diagnostics 500) so
+        // content never overflows and clips. Height stays content-fit so a
+        // near-empty popover isn't half the screen (issue #159).
+        .frame(minWidth: 560, idealWidth: 560, maxWidth: 760, minHeight: 200, maxHeight: 760)
         .environment(\.fontScale, settings.fontSize)
         .onAppear {
             portWatcher.start()
@@ -137,6 +159,15 @@ struct ContentView: View {
         .onChange(of: deviceWatcher.devices) { _, _ in scheduleLivePortRefresh() }
         .onChange(of: powerWatcher.sources) { _, _ in scheduleLivePortRefresh() }
         .onChange(of: pdWatcher.identities) { _, _ in scheduleLivePortRefresh() }
+        // If a Pro screen is re-opened while it's already detached into
+        // its own window, focus that window instead of also showing it
+        // in-place, so it's never in two places at once.
+        .onChange(of: refresh.activeProScreen?.id) { _, newID in
+            guard newID != nil, let route = refresh.activeProScreen else { return }
+            if DetachedProWindowManager.shared.focusIfOpen(route: route) {
+                refresh.activeProScreen = nil
+            }
+        }
     }
 
     private func scheduleLivePortRefresh() {
@@ -247,6 +278,17 @@ struct ContentView: View {
             Spacer()
             ForEach(Array(PluginRegistry.shared.headerButtonBuilders.enumerated()), id: \.offset) { _, builder in
                 builder()
+            }
+            if settings.useMenuBarMode {
+                Button {
+                    refresh.keepOpen.toggle()
+                } label: {
+                    Image(systemName: refresh.keepOpen ? "pin.fill" : "pin")
+                }
+                .buttonStyle(.borderless)
+                .help(refresh.keepOpen
+                    ? String(localized: "Unpin (popover closes when you click away)", bundle: _appLocalizedBundle)
+                    : String(localized: "Keep window open", bundle: _appLocalizedBundle))
             }
             Button {
                 refresh.bump()
@@ -491,9 +533,11 @@ struct PortCard: View {
                         .foregroundStyle(.secondary)
                     Text(summary.headline)
                         .scaledFont(.title3, weight: .bold)
-                    Text(summary.subtitle)
-                        .scaledFont(.callout)
-                        .foregroundStyle(.secondary)
+                    if !summary.subtitle.isEmpty {
+                        Text(summary.subtitle)
+                            .scaledFont(.callout)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Spacer()
                 let ctx = PortCardContext(
@@ -509,6 +553,11 @@ struct PortCard: View {
                         view
                     }
                 }
+            }
+
+            if let diag = ChargingDiagnostic(port: port, sources: powerSources, identities: identities, wattageSource: chargerWattageSource, batteryFullyCharged: batteryFullyCharged) {
+                DiagnosticBanner(diagnostic: diag)
+                    .padding(.leading, 48)
             }
 
             if !summary.bullets.isEmpty {
@@ -537,8 +586,15 @@ struct PortCard: View {
                 .padding(.leading, 48)
             }
 
-            if let diag = ChargingDiagnostic(port: port, sources: powerSources, identities: identities, wattageSource: chargerWattageSource) {
-                DiagnosticBanner(diagnostic: diag)
+            if let dataDiag = DataLinkDiagnostic(
+                port: port,
+                identities: identities,
+                devices: devices,
+                usb3Transports: usb3Transports,
+                cio: cioCapability,
+                thunderboltSwitches: thunderboltSwitches
+            ) {
+                DataLinkBanner(diagnostic: dataDiag)
                     .padding(.leading, 48)
             }
 
@@ -608,6 +664,77 @@ struct DiagnosticBanner: View {
                 .opacity(0.1),
             in: RoundedRectangle(cornerRadius: 8)
         )
+    }
+}
+
+struct DataLinkBanner: View {
+    let diagnostic: DataLinkDiagnostic
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: diagnostic.icon)
+                .foregroundStyle(diagnostic.isWarning ? Color.orange : Color.green)
+                .scaledFont(.callout)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(diagnostic.summary).scaledFont(.callout, weight: .bold)
+                Text(diagnostic.detail).scaledFont(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+        .padding(10)
+        .background(
+            (diagnostic.isWarning ? Color.orange : Color.green)
+                .opacity(0.1),
+            in: RoundedRectangle(cornerRadius: 8)
+        )
+    }
+}
+
+/// Thin chrome around an in-place Pro screen: a Back button to return to
+/// the main content, and (menu-bar mode only) the pin toggle so the
+/// popover can be kept open while plugging cables in and out. The screen
+/// keeps its own header/title below this bar.
+struct ProScreenContainer<Content: View>: View {
+    let isMenuBarMode: Bool
+    let isPinned: Bool
+    let onTogglePin: () -> Void
+    let onBack: () -> Void
+    let onDetach: () -> Void
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button(action: onBack) {
+                    Label(
+                        String(localized: "Back", bundle: _appLocalizedBundle),
+                        systemImage: "chevron.left"
+                    )
+                    .scaledFont(.callout)
+                }
+                .buttonStyle(.borderless)
+                .keyboardShortcut(.escape, modifiers: [])
+                Spacer()
+                if isMenuBarMode {
+                    Button(action: onDetach) {
+                        Image(systemName: "macwindow")
+                    }
+                    .buttonStyle(.borderless)
+                    .help(String(localized: "Open in a separate window", bundle: _appLocalizedBundle))
+                    Button(action: onTogglePin) {
+                        Image(systemName: isPinned ? "pin.fill" : "pin")
+                    }
+                    .buttonStyle(.borderless)
+                    .help(isPinned
+                        ? String(localized: "Unpin (popover closes when you click away)", bundle: _appLocalizedBundle)
+                        : String(localized: "Keep window open", bundle: _appLocalizedBundle))
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            Divider()
+            content
+        }
     }
 }
 
