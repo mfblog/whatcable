@@ -590,7 +590,7 @@
 
       .showcase-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 24px;
         align-items: start;
       }
@@ -677,7 +677,7 @@
             WhatCable Pro
           </div>
           <h1>Go deeper into every<br><span class="accent">USB-C port and cable</span></h1>
-          <p class="lede">The free app tells you what your cable can do. Pro shows you what it's doing right now - live power, PD contracts, port health, and signal-level diagnostics straight from IOKit.</p>
+          <p class="lede">The free app tells you what your cable can do. Pro shows you what's bottlenecking it: Negotiation Diagnostics breaks down every link by Mac port, cable, and device with the weak link highlighted, plus live power metering, PD contract inspection, and signal-level diagnostics straight from IOKit.</p>
           <div class="hero-actions">
             <button class="button accent lg" id="buy-hero">Buy Pro - £4.99</button>
             <a href="#features" class="button secondary lg">See what's included</a>
@@ -685,7 +685,7 @@
           <p class="price-note">One-time purchase. Works on up to 2 Macs. macOS 14+ required.</p>
         </div>
         <div class="hero-img">
-          <img src="screenshot.webp" alt="WhatCable menu bar popover showing USB-C port diagnostics">
+          <img src="screenshot-power-monitor.webp" alt="WhatCable Pro Power Monitor window showing a MagSafe port at 59.8W with the live System Power Input panel below">
         </div>
       </div>
     </section>
@@ -703,11 +703,6 @@
             <img src="screenshot-negotiation.webp" alt="Negotiation Diagnostics screen showing per-port power and data-speed breakdowns with the bottleneck highlighted" loading="lazy">
             <div class="caption">Negotiation Diagnostics</div>
             <div class="caption-detail">Per-port breakdown of what each link supports, with the weak link highlighted</div>
-          </div>
-          <div class="showcase-item">
-            <img src="screenshot-power-monitor.webp" alt="Power Monitor showing live wattage graph over time" loading="lazy">
-            <div class="caption">Power Monitor</div>
-            <div class="caption-detail">Live watts, voltage, and current per port</div>
           </div>
           <div class="showcase-item">
             <img src="screenshot-diagnostics.webp" alt="Pro diagnostics screen showing port health counters, liquid detection status, and the negotiated power contract for one port" loading="lazy">
@@ -738,7 +733,7 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="4" height="9"/><rect x="10" y="7" width="4" height="13"/><rect x="17" y="3" width="4" height="17"/></svg>
             </div>
             <h3>Negotiation Diagnostics</h3>
-            <p>Per connection, see what the Mac port, the cable, and the device each support against what was actually negotiated, side by side, with the weak link highlighted. Includes a cross-check of the cable's e-marker against the Thunderbolt controller, so a cable that under-reports itself is caught.</p>
+            <p>Per connection, see what the Mac port, the cable, and the device each support against what was actually negotiated, side by side, with the weak link highlighted. Includes a cross-check of the cable's e-marker against the Thunderbolt controller, so a cable that under-reports itself is caught. Pro screens open in place inside the popover, with an optional detach into their own window so a screen can stay open while you swap cables.</p>
           </div>
 
           <div class="feature">
