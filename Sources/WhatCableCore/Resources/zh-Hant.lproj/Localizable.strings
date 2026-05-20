@@ -106,7 +106,7 @@
 "Up to %lld Gb/s %@" = "最高 %lld Gb/s %@";
 "VCONN-powered device" = "VCONN 供電裝置";
 "Vendor ID isn't in USB-IF's published list" = "Vendor ID 不在 USB-IF 已公布清單中";
-"What can this USB-C cable actually do?" = "這條 USB-C 線材實際上能做什麼？";
+"What can this USB-C cable actually do?" = "這條 USB-C 線材到底能做什麼？";
 " · %lldW cable" = " · %lldW 線材";
 "high-speed data" = "高速資料傳輸";
 "smart cable" = "帶有 e-marker 的線材";
