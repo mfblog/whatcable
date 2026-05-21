@@ -98,7 +98,7 @@ This is the part nobody talks about. A USB-C cable in a Thunderbolt port is stil
 
 Every USB-C cable rated above 60W and above USB 2.0 speeds contains an e-marker chip. The chip declares what the cable can carry: max current, max voltage, max data rate. macOS reads this chip every time you connect a cable. It just doesn't show you what it reads.
 
-[WhatCable](/) reads the e-marker and shows you what the cable is. Not what you hoped it was, not what the box claimed, what the cable itself is telling the Mac. If you've ever wondered whether the "Thunderbolt cable" you bought online is actually Thunderbolt, this is how you check. You can also see how your cable rates against known references in the [cables database](/cables/).
+[WhatCable](/) reads the e-marker and shows you what the cable is. Not what you hoped it was, not what the box claimed, what the cable itself is telling the Mac. If you've ever wondered whether the "Thunderbolt cable" you bought online is actually Thunderbolt, this is how you check. You can also see how your cable rates against known references in the [cables database](/cables).
 
 ![WhatCable showing a USB-C cable identified as USB4 Gen 3, 40 Gbps, Thunderbolt 4 class, rated for 5A at 50V, with a confirmation that the connected 10 Gbps drive is running at full device speed](https://images.whatcable.uk/1779375774954-whatcable-screenshot-usb4-cable-readout.webp "WhatCable identifying a USB4 cable in the menu bar")
 
@@ -116,7 +116,7 @@ Both USB-C and Thunderbolt use the same USB Power Delivery spec for charging. Th
 
 A TB4 host port has to deliver at least 15W. A TB4 PC host port has to deliver at least 100W on at least one port. Basic USB-C has no such minimum.
 
-For charging specifically, the protocol matters less than the wattage. A 140W basic USB-C charger will charge a 16" MacBook Pro just as fast as a 140W Thunderbolt cable would, because they're using the same PD spec underneath. We've written about [why your MacBook might still charge slowly](/blog/why-is-my-macbook-charging-so-slow/) even with the right adapter, and it almost always comes down to the cable.
+For charging specifically, the protocol matters less than the wattage. A 140W basic USB-C charger will charge a 16" MacBook Pro just as fast as a 140W Thunderbolt cable would, because they're using the same PD spec underneath. We've written about [why your MacBook might still charge slowly](/blog/why-is-my-macbook-charging-so-slow) even with the right adapter, and it almost always comes down to the cable.
 
 ## Cost and why TB cables are expensive
 
