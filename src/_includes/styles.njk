@@ -158,6 +158,52 @@
     margin: 32px 0;
   }
 
+  /* Scrollable wrapper injected by the Eleventy wrapTables transform. */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 0 20px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .table-wrap table { margin: 0; border: none; border-radius: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    margin: 0 0 20px;
+  }
+  thead tr {
+    background: var(--line-soft);
+    border-bottom: 2px solid var(--line);
+  }
+  th {
+    text-align: left;
+    padding: 9px 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-soft);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--line-soft); }
+
+  /* Images in post body: markdown renders bare <img> not <figure>, so scope
+     the size constraint and chrome here rather than relying on figure img. */
+  .post-body img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    margin: 20px auto;
+  }
+
   figure { margin: 20px 0; }
   figure img {
     display: block;

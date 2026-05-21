@@ -186,6 +186,52 @@
     margin: 32px 0;
   }
 
+  /* Scrollable wrapper injected by the Eleventy wrapTables transform. */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 0 20px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .table-wrap table { margin: 0; border: none; border-radius: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    margin: 0 0 20px;
+  }
+  thead tr {
+    background: var(--line-soft);
+    border-bottom: 2px solid var(--line);
+  }
+  th {
+    text-align: left;
+    padding: 9px 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-soft);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--line-soft); }
+
+  /* Images in post body: markdown renders bare <img> not <figure>, so scope
+     the size constraint and chrome here rather than relying on figure img. */
+  .post-body img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    margin: 20px auto;
+  }
+
   figure { margin: 20px 0; }
   figure img {
     display: block;
@@ -351,6 +397,19 @@
         
           <li>
             <h2 class="post-title">
+              <a href="/blog/thunderbolt-vs-usb-c">Thunderbolt vs USB-C: what the connector hides</a>
+            </h2>
+            <p class="post-meta">
+              <time datetime="2026-05-21T00:00:00.000Z">21 May 2026</time>
+               &nbsp;·&nbsp; Deep dives
+            </p>
+            
+              <p class="post-summary">USB-C is the connector. Thunderbolt is one of the protocols that runs through it. Here&#39;s what actually changes between TB3, TB4, USB4, and TB5.</p>
+            
+          </li>
+        
+          <li>
+            <h2 class="post-title">
               <a href="/blog/hello-world">Hello, world</a>
             </h2>
             <p class="post-meta">
@@ -359,6 +418,19 @@
             </p>
             
               <p class="post-summary">Kicking off the WhatCable blog. What you&#39;ll find here, what to expect, and how to subscribe.</p>
+            
+          </li>
+        
+          <li>
+            <h2 class="post-title">
+              <a href="/blog/why-is-my-macbook-charging-so-slow">Why is my MacBook charging so slow? A real diagnosis.</a>
+            </h2>
+            <p class="post-meta">
+              <time datetime="2026-05-21T00:00:00.000Z">21 May 2026</time>
+               &nbsp;·&nbsp; Guides
+            </p>
+            
+              <p class="post-summary">macOS now tells you when your charger is slow. It doesn&#39;t tell you why. Here&#39;s how to actually work out what&#39;s holding back your MacBook charging.</p>
             
           </li>
         

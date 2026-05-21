@@ -66,6 +66,16 @@ export default async function (eleventyConfig) {
       .sort((a, b) => b.date - a.date)
   );
 
+  // Wrap every <table> in a scrollable div so wide tables don't blow out the
+  // layout on narrow screens. The markdown renderer can't add wrapper markup
+  // directly, so this transform does it as a post-processing step on HTML.
+  eleventyConfig.addTransform("wrapTables", function (content) {
+    if (!this.page.outputPath?.endsWith(".html")) return content;
+    return content
+      .replace(/<table/g, '<div class="table-wrap"><table')
+      .replace(/<\/table>/g, "</table></div>");
+  });
+
   eleventyConfig.addTransform("stripFeedTrailingSlashes", function (content) {
     if (!this.page.outputPath || !this.page.outputPath.endsWith("feed.xml")) {
       return content;
