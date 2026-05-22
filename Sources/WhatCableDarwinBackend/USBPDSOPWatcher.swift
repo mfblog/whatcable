@@ -99,10 +99,14 @@ public final class USBPDSOPWatcher: ObservableObject {
         var entryID: UInt64 = 0
         IORegistryEntryGetRegistryEntryID(service, &entryID)
 
-        var props: Unmanaged<CFMutableDictionary>?
-        guard IORegistryEntryCreateCFProperties(service, &props, kCFAllocatorDefault, 0) == KERN_SUCCESS,
-              let dict = props?.takeRetainedValue() as? [String: Any] else {
-            return nil
+        // Read keys individually rather than fetching the full property
+        // dictionary. The bulk fetch (IORegistryEntryCreateCFProperties)
+        // can abort the process from inside IOCFUnserializeBinary when
+        // the kernel returns a malformed serialised properties blob,
+        // typically when the service is being torn down mid-read. The
+        // per-key call has no such failure path. See issue #181.
+        func read(_ key: String) -> Any? {
+            IORegistryEntryCreateCFProperty(service, key as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue()
         }
 
         var classNameBuf = [CChar](repeating: 0, count: 128)
@@ -110,13 +114,13 @@ public final class USBPDSOPWatcher: ObservableObject {
             ? String(cString: classNameBuf)
             : nil
 
-        let endpoint = Self.endpoint(from: dict, className: className)
-        let parent = Self.parentPortIdentity(from: dict)
-        let specRev = (dict["Specification Revision"] as? NSNumber)?.intValue ?? 0
+        let endpoint = Self.endpoint(read: read, className: className)
+        let parent = Self.parentPortIdentity(read: read)
+        let specRev = (read("Specification Revision") as? NSNumber)?.intValue ?? 0
 
-        let metadata = Self.metadataDictionary(from: dict)
-        let vendorID = Self.vendorID(from: dict, metadata: metadata)
-        let productID = Self.productID(from: dict, metadata: metadata)
+        let metadata = Self.metadataDictionary(read: read)
+        let vendorID = Self.vendorID(read: read, metadata: metadata)
+        let productID = Self.productID(read: read, metadata: metadata)
         let bcdDevice = Self.bcdDevice(from: metadata)
 
         let vdos: [UInt32] = ((metadata["VDOs"] as? [Any]) ?? []).compactMap { value in
@@ -137,18 +141,18 @@ public final class USBPDSOPWatcher: ObservableObject {
         )
     }
 
-    nonisolated static func endpointName(from dict: [String: Any]) -> String {
-        (dict["ComponentName"] as? String)
-            ?? (dict["AddressDescription"] as? String)
-            ?? (dict["Address Description"] as? String)
-            ?? (dict["TransportTypeDescription"] as? String)
+    nonisolated static func endpointName(read: (String) -> Any?) -> String {
+        (read("ComponentName") as? String)
+            ?? (read("AddressDescription") as? String)
+            ?? (read("Address Description") as? String)
+            ?? (read("TransportTypeDescription") as? String)
             ?? "Unknown"
     }
 
-    nonisolated static func endpoint(from dict: [String: Any], className: String? = nil) -> USBPDSOP.Endpoint {
-        if let name = (dict["ComponentName"] as? String)
-            ?? (dict["AddressDescription"] as? String)
-            ?? (dict["Address Description"] as? String) {
+    nonisolated static func endpoint(read: (String) -> Any?, className: String? = nil) -> USBPDSOP.Endpoint {
+        if let name = (read("ComponentName") as? String)
+            ?? (read("AddressDescription") as? String)
+            ?? (read("Address Description") as? String) {
             return USBPDSOP.Endpoint(rawValue: name) ?? .unknown
         }
         // The IOKit class name is the most reliable signal: macOS exposes
@@ -163,7 +167,7 @@ public final class USBPDSOPWatcher: ObservableObject {
         // MagSafe CC transport has no ComponentName; map "CC" only from
         // TransportTypeDescription so a future node with ComponentName="CC"
         // is not misclassified as a cable e-marker.
-        switch dict["TransportTypeDescription"] as? String {
+        switch read("TransportTypeDescription") as? String {
         case "SOP": return .sop
         case "SOP'", "CC": return .sopPrime
         case "SOP''": return .sopDoublePrime
@@ -172,24 +176,25 @@ public final class USBPDSOPWatcher: ObservableObject {
     }
 
     /// Reads the parent port type and number from the service's properties.
-    /// Same approach as `PowerSourceWatcher.parentPortIdentity(from:)`. The
+    /// Same approach as `PowerSourceWatcher.parentPortIdentity(read:)`. The
     /// BuiltIn keys must take priority so PD identity and power data resolve
     /// to the same portKey for a given physical port.
-    nonisolated static func parentPortIdentity(from dict: [String: Any]) -> (type: Int, number: Int) {
-        let type = (dict["ParentBuiltInPortType"] as? NSNumber)?.intValue
-            ?? (dict["ParentPortType"] as? NSNumber)?.intValue
+    nonisolated static func parentPortIdentity(read: (String) -> Any?) -> (type: Int, number: Int) {
+        let type = (read("ParentBuiltInPortType") as? NSNumber)?.intValue
+            ?? (read("ParentPortType") as? NSNumber)?.intValue
             ?? 0
-        let number = (dict["ParentBuiltInPortNumber"] as? NSNumber)?.intValue
-            ?? (dict["ParentPortNumber"] as? NSNumber)?.intValue
-            ?? Int(((dict["Priority"] as? NSNumber)?.uint64Value ?? 0) & 0xFF)
+        let number = (read("ParentBuiltInPortNumber") as? NSNumber)?.intValue
+            ?? (read("ParentPortNumber") as? NSNumber)?.intValue
+            ?? Int(((read("Priority") as? NSNumber)?.uint64Value ?? 0) & 0xFF)
         return (type, number)
     }
 
-    nonisolated static func metadataDictionary(from dict: [String: Any]) -> [String: Any] {
-        if let metadata = dict["Metadata"] as? [String: Any] {
+    nonisolated static func metadataDictionary(read: (String) -> Any?) -> [String: Any] {
+        let raw = read("Metadata")
+        if let metadata = raw as? [String: Any] {
             return metadata
         }
-        if let nsMetadata = dict["Metadata"] as? NSDictionary {
+        if let nsMetadata = raw as? NSDictionary {
             var converted: [String: Any] = [:]
             for case let (key, value) as (String, Any) in nsMetadata {
                 converted[key] = value
@@ -199,19 +204,19 @@ public final class USBPDSOPWatcher: ObservableObject {
         return [:]
     }
 
-    nonisolated static func vendorID(from dict: [String: Any], metadata: [String: Any]) -> Int {
+    nonisolated static func vendorID(read: (String) -> Any?, metadata: [String: Any]) -> Int {
         (metadata["Vendor ID"] as? NSNumber)?.intValue
             ?? (metadata["Vendor ID (SOP1)"] as? NSNumber)?.intValue
-            ?? (dict["Vendor ID (SOP1)"] as? NSNumber)?.intValue
-            ?? (dict["Vendor ID"] as? NSNumber)?.intValue
+            ?? (read("Vendor ID (SOP1)") as? NSNumber)?.intValue
+            ?? (read("Vendor ID") as? NSNumber)?.intValue
             ?? 0
     }
 
-    nonisolated static func productID(from dict: [String: Any], metadata: [String: Any]) -> Int {
+    nonisolated static func productID(read: (String) -> Any?, metadata: [String: Any]) -> Int {
         (metadata["Product ID"] as? NSNumber)?.intValue
             ?? (metadata["Product ID (SOP1)"] as? NSNumber)?.intValue
-            ?? (dict["Product ID (SOP1)"] as? NSNumber)?.intValue
-            ?? (dict["Product ID"] as? NSNumber)?.intValue
+            ?? (read("Product ID (SOP1)") as? NSNumber)?.intValue
+            ?? (read("Product ID") as? NSNumber)?.intValue
             ?? 0
     }
 
