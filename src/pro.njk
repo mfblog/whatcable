@@ -147,6 +147,37 @@ extraHead: |
       background: var(--panel);
       border-bottom: 1px solid var(--line);
     }
+    .pro-page .quotes-strip .quotes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .pro-page .quotes-strip .pull-quote {
+      padding: 24px 26px;
+      border-radius: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin: 0;
+    }
+    .pro-page .quotes-strip .pull-quote .quote {
+      font-size: 16px;
+      line-height: 1.55;
+      font-weight: 500;
+      color: var(--ink);
+      margin: 0;
+    }
+    .pro-page .quotes-strip .pull-quote .attribution {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    @media (max-width: 880px) {
+      .pro-page .quotes-strip .quotes-grid { grid-template-columns: 1fr; }
+    }
+
     .pro-page .showcase .section-head { text-align: center; margin: 0 auto 48px; }
     .pro-page .showcase-grid {
       display: grid;
@@ -398,6 +429,29 @@ extraHead: |
     </div>
     <div class="hero-img">
       <img src="/screenshot-power-monitor.webp" alt="WhatCable Pro Power Monitor window showing a MagSafe port at 59.8W with the live System Power Input panel below">
+    </div>
+  </div>
+</section>
+
+<section class="quotes-strip" aria-label="What reviewers said">
+  <div class="wrap-wide">
+    <div class="section-head">
+      <span class="section-tag">Reviews</span>
+      <h2>What reviewers said.</h2>
+    </div>
+    <div class="quotes-grid">
+      <figure class="pull-quote">
+        <blockquote class="quote">A tiny app that does one thing, does it well.</blockquote>
+        <figcaption class="attribution">Dwight Silverman, Houston Chronicle</figcaption>
+      </figure>
+      <figure class="pull-quote">
+        <blockquote class="quote">WhatCable does a fine job of analyzing the cables attached to your Mac.</blockquote>
+        <figcaption class="attribution">David Nield, Lifehacker</figcaption>
+      </figure>
+      <figure class="pull-quote">
+        <blockquote class="quote">Finally tells you what your USB-C cables can actually do.</blockquote>
+        <figcaption class="attribution">Brady Snyder, MakeUseOf</figcaption>
+      </figure>
     </div>
   </div>
 </section>

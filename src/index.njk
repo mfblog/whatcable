@@ -129,57 +129,6 @@ extraHead: |
       box-shadow: var(--shadow-lg);
     }
 
-    .home .quotes-strip {
-      padding: 56px 0 48px;
-    }
-    .home .quotes-strip .section-tag {
-      display: block;
-      text-align: center;
-      margin-bottom: 28px;
-    }
-    .home .quotes-strip .quotes-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 20px;
-      max-width: 1080px;
-      margin: 0 auto;
-    }
-    .home .quotes-strip .pull-quote {
-      padding: 32px 30px;
-      border-radius: 14px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin: 0;
-    }
-    .home .quotes-strip .pull-quote .quote {
-      font-size: clamp(20px, 1.9vw, 24px);
-      line-height: 1.35;
-      font-weight: 700;
-      color: var(--ink);
-      letter-spacing: -0.012em;
-      margin: 0;
-    }
-    .home .quotes-strip .pull-quote .quote::before { content: "\201C"; }
-    .home .quotes-strip .pull-quote .quote::after { content: "\201D"; }
-    .home .quotes-strip .pull-quote .attribution {
-      font-size: 13px;
-      color: var(--accent-strong);
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    @media (max-width: 960px) {
-      .home .quotes-strip .quotes-grid { grid-template-columns: 1fr; max-width: 560px; }
-    }
-    @media (max-width: 720px) {
-      .home .quotes-strip { padding: 40px 0 32px; }
-      .home .quotes-strip .pull-quote { padding: 26px 24px; }
-    }
-
     .home .press { padding: 20px 0 12px; border-bottom: 1px solid var(--line-soft); }
     .home .press-label {
       text-align: center;
@@ -788,26 +737,6 @@ extraHead: |
       <div class="setting-card"><div class="icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><h3>Dock mode</h3><p>Run as a regular window instead of a menu bar icon.</p></div>
       <div class="setting-card"><div class="icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></div><h3>Launch at login</h3><p>Start automatically so it is ready when you plug in.</p></div>
       <div class="setting-card"><div class="icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><h3>Hide empty ports</h3><p>Only show ports with something plugged in.</p></div>
-    </div>
-  </div>
-</section>
-
-<section class="quotes-strip" aria-label="What reviewers said">
-  <div class="wrap-wide">
-    <span class="section-tag">Reviews</span>
-    <div class="quotes-grid">
-      <figure class="pull-quote">
-        <blockquote class="quote">A tiny app that does one thing, does it well.</blockquote>
-        <figcaption class="attribution">Dwight Silverman, Houston Chronicle</figcaption>
-      </figure>
-      <figure class="pull-quote">
-        <blockquote class="quote">WhatCable does a fine job of analyzing the cables attached to your Mac.</blockquote>
-        <figcaption class="attribution">David Nield, Lifehacker</figcaption>
-      </figure>
-      <figure class="pull-quote">
-        <blockquote class="quote">Finally tells you what your USB-C cables can actually do.</blockquote>
-        <figcaption class="attribution">Brady Snyder, MakeUseOf</figcaption>
-      </figure>
     </div>
   </div>
 </section>
