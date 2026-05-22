@@ -86,6 +86,11 @@ public enum ThunderboltProbe {
     }
 
     private static func ioProperties(_ service: io_service_t) -> [String: Any]? {
+        // ThunderboltProbe is a diagnostic helper (`--tb-debug`). It intentionally
+        // reads the entire property dict so it can render all keys verbatim.
+        // The keys are not known in advance, so per-key reads are not feasible.
+        // TB switch services are persistent during the probe lifetime, so the
+        // IOCFUnserializeBinary teardown crash (issue #181) does not apply.
         var unmanaged: Unmanaged<CFMutableDictionary>?
         let kr = IORegistryEntryCreateCFProperties(service, &unmanaged, kCFAllocatorDefault, 0)
         guard kr == KERN_SUCCESS, let dict = unmanaged?.takeRetainedValue() else { return nil }

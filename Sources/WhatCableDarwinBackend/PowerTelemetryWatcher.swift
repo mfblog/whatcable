@@ -319,21 +319,19 @@ public final class PowerTelemetryWatcher: ObservableObject {
             defer { IOObjectRelease(iter) }
             while case let service = IOIteratorNext(iter), service != 0 {
                 defer { IOObjectRelease(service) }
-                var props: Unmanaged<CFMutableDictionary>?
-                guard IORegistryEntryCreateCFProperties(service, &props, kCFAllocatorDefault, 0) == KERN_SUCCESS,
-                      let dict = props?.takeRetainedValue() as? [String: Any] else {
-                    continue
+                func read(_ key: String) -> Any? {
+                    IORegistryEntryCreateCFProperty(service, key as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue()
                 }
-                let portType = dict["PortTypeDescription"] as? String
+                let portType = read("PortTypeDescription") as? String
                 let isRealPort = (portType == "USB-C" || portType?.hasPrefix("MagSafe") == true)
                 guard isRealPort else { continue }
-                let portNumber = wcPortIndex(from: dict, service: service)
+                let portNumber = wcPortIndex(read: read, service: service)
                 guard portNumber != 0 else { continue }
                 let rawType: Int
                 if portType?.hasPrefix("MagSafe") == true {
                     rawType = 0x11
                 } else {
-                    rawType = (dict["PortType"] as? Int) ?? 0x2
+                    rawType = (read("PortType") as? Int) ?? 0x2
                 }
                 let key = "\(rawType)/\(portNumber)"
                 if !keys.contains(key) {
@@ -353,6 +351,12 @@ public final class PowerTelemetryWatcher: ObservableObject {
 
         while case let service = IOIteratorNext(iter), service != 0 {
             defer { IOObjectRelease(service) }
+            // The bulk fetch is intentional: this function returns the entire raw
+            // property dict to the diagnostics layer. The caller enumerates keys
+            // it doesn't know in advance, so per-key reads are not feasible.
+            // AppleSmartBattery is a persistent service; it is never being torn
+            // down mid-read, so the IOCFUnserializeBinary crash path (issue #181)
+            // does not apply here.
             var props: Unmanaged<CFMutableDictionary>?
             guard IORegistryEntryCreateCFProperties(service, &props, kCFAllocatorDefault, 0) == KERN_SUCCESS,
                   let dict = props?.takeRetainedValue() as? [String: Any] else {

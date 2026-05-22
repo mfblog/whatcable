@@ -91,6 +91,12 @@ public final class USBWatcher: ObservableObject {
         var entryID: UInt64 = 0
         IORegistryEntryGetRegistryEntryID(service, &entryID)
 
+        // USBWatcher uses the bulk fetch intentionally: it iterates all keys
+        // from the returned dictionary to populate `rawProperties` on USBDevice.
+        // There is no fixed key list, so per-key reads are not feasible here.
+        // USB device services are stable (not torn-down mid-read), so the
+        // IOCFUnserializeBinary crash path described in issue #181 does not
+        // apply. See also: AppleHPMInterfaceWatcher.makePort for the contrast.
         var props: Unmanaged<CFMutableDictionary>?
         guard IORegistryEntryCreateCFProperties(service, &props, kCFAllocatorDefault, 0) == KERN_SUCCESS,
               let dict = props?.takeRetainedValue() as? [String: Any] else {
