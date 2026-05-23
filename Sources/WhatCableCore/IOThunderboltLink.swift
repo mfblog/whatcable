@@ -81,6 +81,19 @@ public struct SupportedSpeedMask: Hashable {
         self.supportsUsb4Tb4 = (rawValue & 0x4) != 0
         self.supportsTb5 = (rawValue & 0x2) != 0
     }
+
+    /// Maximum headline full-link Gbps this controller can negotiate, taking
+    /// the highest supported generation. Nil if the mask is empty or has only
+    /// unrecognised bits. TB3 and TB4 / USB4 v1 both top out at 40 Gbps; TB5 /
+    /// USB4 v2 at 80 Gbps. Asymmetric mode (TB5 120/40) is deliberately not
+    /// modelled; the symmetric headline is what the diagnostic compares
+    /// against.
+    public var maxTotalGbps: Double? {
+        if supportsTb5 { return 80 }
+        if supportsUsb4Tb4 { return 40 }
+        if supportsTb3 { return 40 }
+        return nil
+    }
 }
 
 /// Decode of `Current Link Width`. This is a bitmask in the Linux model

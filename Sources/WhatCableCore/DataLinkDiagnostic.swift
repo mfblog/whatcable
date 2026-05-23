@@ -102,9 +102,11 @@ extension DataLinkDiagnostic {
     ///     `nil` it is resolved from `thunderboltSwitches`. Mainly a test
     ///     seam (mirrors `ChargingDiagnostic`'s defaulted `wattageSource`).
     ///   - hostMaxGbps: what this Mac port can do, resolved by the caller.
-    ///     This is the one genuinely uncertain input, so it is optional:
-    ///     when `nil` the diagnostic never blames the host, it degrades to
-    ///     `unknownCable` / `degraded` instead.
+    ///     Optional: when `nil` the diagnostic tries to infer it from the
+    ///     host root Thunderbolt switch's `supportedSpeed` mask. If that
+    ///     also fails (non-TB port, switches not yet populated) the host
+    ///     stays unknown and the diagnostic never blames it (degrades to
+    ///     `unknownCable` / `degraded` instead).
     public init?(
         port: AppleHPMInterface,
         identities: [USBPDSOP],
@@ -115,6 +117,11 @@ extension DataLinkDiagnostic {
         tbActiveGbps: Double? = nil,
         hostMaxGbps: Double? = nil
     ) {
+        // Resolve the Mac port's capability. Explicit caller value wins
+        // (mainly a test seam). Otherwise infer from the host root TB
+        // switch's `supportedSpeed` mask. Nil for non-TB USB-C ports.
+        let resolvedHostMaxGbps = hostMaxGbps
+            ?? Self.hostMaxGbpsFromSwitches(port: port, switches: thunderboltSwitches)
         // Same guard as ChargingDiagnostic: an inactive port can still
         // expose stale link state. Don't diagnose a port that isn't live.
         guard port.connectionActive == true else { return nil }
@@ -180,7 +187,7 @@ extension DataLinkDiagnostic {
         // constructed instance flows through here (the only earlier return
         // is the no-active-speed guard, which yields no instance).
         self.facts = Facts(
-            hostGbps: hostMaxGbps,
+            hostGbps: resolvedHostMaxGbps,
             cableEmarkerGbps: emarkerGbps,
             cableControllerGbps: cioGbps,
             cableGbps: cableMaxGbps,
@@ -195,9 +202,9 @@ extension DataLinkDiagnostic {
         // Every capability we actually know about, tagged by party. The
         // link can never run faster than the slowest of these.
         var caps: [(party: String, value: Double)] = []
-        if let c = cableMaxGbps  { caps.append((party: "cable",  value: c)) }
-        if let h = hostMaxGbps   { caps.append((party: "host",   value: h)) }
-        if let d = deviceMaxGbps { caps.append((party: "device", value: d)) }
+        if let c = cableMaxGbps         { caps.append((party: "cable",  value: c)) }
+        if let h = resolvedHostMaxGbps  { caps.append((party: "host",   value: h)) }
+        if let d = deviceMaxGbps        { caps.append((party: "device", value: d)) }
 
         guard let expected = caps.map(\.value).min() else {
             // We know the active speed but have nothing to compare it to:
@@ -281,6 +288,22 @@ extension DataLinkDiagnostic {
             return nil
         }
         return gen.totalGbps
+    }
+
+    /// The Mac port's maximum throughput, taken from the host root TB
+    /// switch's `supportedSpeed` mask. This is what the chip can negotiate,
+    /// not what is currently active. Returns `nil` for non-TB USB-C ports
+    /// (no matching host root) or when the switch graph isn't loaded yet.
+    static func hostMaxGbpsFromSwitches(
+        port: AppleHPMInterface,
+        switches: [IOThunderboltSwitch]
+    ) -> Double? {
+        guard !switches.isEmpty,
+              let socketID = ThunderboltTopology.socketID(fromServiceName: port.serviceName),
+              let root = ThunderboltTopology.hostRoot(forSocketID: socketID, in: switches) else {
+            return nil
+        }
+        return root.supportedSpeed.maxTotalGbps
     }
 
     /// USB 3 signaling generation to Gbps. 1 = Gen 1 (5), 2 = Gen 2 (10).

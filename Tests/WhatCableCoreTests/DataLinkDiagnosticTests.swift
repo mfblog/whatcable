@@ -329,4 +329,87 @@ struct DataLinkDiagnosticTests {
         #expect(diag == nil,
             "USB2-only link must not produce a USB3 data-link verdict, got: \(String(describing: diag?.bottleneck))")
     }
+
+    // MARK: - Mac port speed inference
+
+    /// Build a host root TB switch with the given `supportedSpeed` mask and
+    /// one active lane port matching `socketID`. Minimal fixture: just
+    /// enough for `hostMaxGbpsFromSwitches` to walk to it.
+    private func hostSwitch(socketID: String, supportedRaw: UInt8, activeSpeed: LinkGeneration) -> IOThunderboltSwitch {
+        let lane = IOThunderboltPort(
+            portNumber: 1,
+            socketID: socketID,
+            adapterType: .lane,
+            currentSpeed: activeSpeed,
+            currentWidth: LinkWidth(rawValue: 0x2),
+            targetWidth: nil,
+            rawTargetSpeed: nil,
+            linkBandwidthRaw: nil
+        )
+        return IOThunderboltSwitch(
+            id: 100,
+            className: "IOIOThunderboltSwitchType5",
+            vendorID: 1452,
+            vendorName: "Apple Inc.",
+            modelName: "Mac",
+            routerID: 0,
+            depth: 0,
+            routeString: 0,
+            upstreamPortNumber: 0,
+            maxPortNumber: 8,
+            supportedSpeed: SupportedSpeedMask(rawValue: supportedRaw),
+            ports: [lane],
+            parentSwitchUID: nil
+        )
+    }
+
+    @Test("hostMaxGbps inferred from host root supportedSpeed (TB4-class controller)")
+    func hostMaxGbpsInferredTB4() {
+        // Mac with a Type5 controller: supports TB3 + TB4. Max = 40 Gbps.
+        let host = hostSwitch(socketID: "1", supportedRaw: 0xC, activeSpeed: .usb4Tb4)
+        let diag = DataLinkDiagnostic(
+            port: makePort(),
+            identities: [],
+            devices: [],
+            usb3Transports: [usb3(signaling: 2)],
+            cio: nil,
+            thunderboltSwitches: [host]
+            // hostMaxGbps deliberately omitted; should be inferred from `host`.
+        )
+        #expect(diag?.facts.hostGbps == 40,
+            "Expected 40 Gbps host max from Type5 supportedSpeed mask, got: \(String(describing: diag?.facts.hostGbps))")
+    }
+
+    @Test("hostMaxGbps inferred from host root supportedSpeed (TB5-class controller)")
+    func hostMaxGbpsInferredTB5() {
+        // Mac with a Type7 controller: supports TB3 + TB4 + TB5. Max = 80.
+        let host = hostSwitch(socketID: "1", supportedRaw: 0xE, activeSpeed: .tb5)
+        let diag = DataLinkDiagnostic(
+            port: makePort(),
+            identities: [],
+            devices: [],
+            usb3Transports: [usb3(signaling: 2)],
+            cio: nil,
+            thunderboltSwitches: [host]
+        )
+        #expect(diag?.facts.hostGbps == 80,
+            "Expected 80 Gbps host max from Type7 supportedSpeed mask, got: \(String(describing: diag?.facts.hostGbps))")
+    }
+
+    @Test("Explicit hostMaxGbps wins over the inference")
+    func explicitHostMaxGbpsWins() {
+        // Caller passes 5 Gbps explicitly even though the switch graph
+        // would infer 40. The explicit value should be honoured (test seam).
+        let host = hostSwitch(socketID: "1", supportedRaw: 0xC, activeSpeed: .usb4Tb4)
+        let diag = DataLinkDiagnostic(
+            port: makePort(),
+            identities: [],
+            devices: [],
+            usb3Transports: [usb3(signaling: 2)],
+            cio: nil,
+            thunderboltSwitches: [host],
+            hostMaxGbps: 5
+        )
+        #expect(diag?.facts.hostGbps == 5)
+    }
 }
