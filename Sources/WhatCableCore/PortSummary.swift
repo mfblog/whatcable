@@ -247,13 +247,17 @@ extension PortSummary {
             || !devices.isEmpty
         let hasPayload = !active.isEmpty || hasPartner
 
+        let negotiatedAbove3A = chargingSource?.winning?.maxCurrentMA ?? 0 > 3000
+
         if hasEmarker {
             bullets.append(String(localized: "Cable has an e-marker chip (advertises its capabilities)", bundle: _coreLocalizedBundle))
         } else if hasPayload && !isMagSafe {
-            if pdCapable {
-                bullets.append(String(localized: "No e-marker detected. The cable may have one, but macOS only checks above 3A.", bundle: _coreLocalizedBundle))
-            } else {
+            if !pdCapable {
                 bullets.append(String(localized: "This port can't read cable details (USB-only port, no Power Delivery)", bundle: _coreLocalizedBundle))
+            } else if negotiatedAbove3A || hasTB {
+                bullets.append(String(localized: "No e-marker detected. This cable doesn't advertise its capabilities.", bundle: _coreLocalizedBundle))
+            } else {
+                bullets.append(String(localized: "No e-marker detected. The cable may have one, but macOS only reads it above 3A or with Thunderbolt.", bundle: _coreLocalizedBundle))
             }
         }
 

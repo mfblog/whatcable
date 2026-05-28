@@ -58,7 +58,8 @@
 "Linked at %@" = "Enlazado a %@";
 "Negotiation hasn't completed yet." = "La negociación aún no se ha completado.";
 "No USB-C / MagSafe ports were found on this Mac." = "No se encontraron puertos USB-C / MagSafe en este Mac.";
-"No e-marker detected. The cable may have one, but macOS only checks above 3A." = "No se detectó e-marker. El cable puede tener uno, pero macOS solo comprueba por encima de 3 A.";
+"No e-marker detected. This cable doesn't advertise its capabilities." = "No se detectó e-marker. Este cable no anuncia sus capacidades.";
+"No e-marker detected. The cable may have one, but macOS only reads it above 3A or with Thunderbolt." = "No se detectó e-marker. El cable puede tener uno, pero macOS solo lo lee por encima de 3 A o con Thunderbolt.";
 "Nothing connected" = "Nada conectado";
 "Only USB 2.0 is active. If you expected high speed, the cable may not support it." = "Solo USB 2.0 está activo. Si esperabas alta velocidad, el cable puede no soportarlo.";
 "Optical" = "Óptico";

@@ -20,6 +20,9 @@ public enum VendorDB {
 
     public static func name(for vendorID: Int) -> String? {
         if let override = curatedOverrides[vendorID] { return override }
+        if vendorID == 0 {
+            return "No vendor reported"
+        }
         // 0xFFFF is the USB-PD spec-defined "no vendor ID assigned"
         // sentinel (PID forced to 0). Surface that neutrally rather
         // than letting it look unregistered.
@@ -36,12 +39,14 @@ public enum VendorDB {
     /// `CableTrustReport` to gate the `vidNotInUSBIFList` flag.
     public static func isRegistered(_ vendorID: Int) -> Bool {
         if curatedOverrides[vendorID] != nil { return true }
+        if vendorID == 0 { return false }
         if vendorID == 0xFFFF { return false }
         return CableDB.isUSBIFRegistered(vendorID)
     }
 
     /// Returns "Apple (0x05AC)" if known, else "0x05AC".
     public static func label(for vendorID: Int) -> String {
+        if vendorID == 0 { return "No vendor reported" }
         if let n = name(for: vendorID) {
             return "\(n) (0x\(String(format: "%04X", vendorID)))"
         }

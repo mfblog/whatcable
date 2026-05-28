@@ -58,7 +58,8 @@
 "Linked at %@" = "Կապված է %@ արագությամբ";
 "Negotiation hasn't completed yet." = "Համաձայնեցումը դեռ չի ավարտվել:";
 "No USB-C / MagSafe ports were found on this Mac." = "Այս Mac-ի վրա USB-C կամ MagSafe պորտեր չեն գտնվել:";
-"No e-marker detected. The cable may have one, but macOS only checks above 3A." = "e-marker չի հայտնաբերվել: Մալուխը կարող է ունենալ, բայց macOS-ը ստուգում է միայն 3A-ից բարձր:";
+"No e-marker detected. This cable doesn't advertise its capabilities." = "e-marker չի հայտնաբերվել: Այս մալուխը չի հայտարարում իր հնարավորությունները:";
+"No e-marker detected. The cable may have one, but macOS only reads it above 3A or with Thunderbolt." = "e-marker չի հայտնաբերվել: Մալուխը կարող է ունենալ, բայց macOS-ը կարդում է միայն 3A-ից բարձր կամ Thunderbolt-ի հետ:";
 "Nothing connected" = "Ոչինչ միացված չէ";
 "Only USB 2.0 is active. If you expected high speed, the cable may not support it." = "Ակտիվ է միայն USB 2.0-ը: Եթե ակնկալում էիք բարձր արագություն, հնարավոր է՝ մալուխը չի աջակցում այն:";
 "Optical" = "Օպտիկական";

@@ -58,7 +58,8 @@
 "Linked at %@" = "%@ पर लिंक्ड";
 "Negotiation hasn't completed yet." = "नेगोशिएशन अभी पूरा नहीं हुआ है।";
 "No USB-C / MagSafe ports were found on this Mac." = "इस Mac पर कोई USB-C / MagSafe पोर्ट नहीं मिला।";
-"No e-marker detected. The cable may have one, but macOS only checks above 3A." = "कोई e-marker नहीं मिला। केबल में हो सकता है, लेकिन macOS केवल 3 A से ऊपर जाँचता है।";
+"No e-marker detected. This cable doesn't advertise its capabilities." = "कोई e-marker नहीं मिला। यह केबल अपनी क्षमताओं की जानकारी नहीं देती।";
+"No e-marker detected. The cable may have one, but macOS only reads it above 3A or with Thunderbolt." = "कोई e-marker नहीं मिला। केबल में हो सकता है, लेकिन macOS इसे केवल 3 A से ऊपर या Thunderbolt के साथ पढ़ता है।";
 "Nothing connected" = "कुछ भी कनेक्ट नहीं";
 "Only USB 2.0 is active. If you expected high speed, the cable may not support it." = "केवल USB 2.0 सक्रिय है। अगर आप हाई स्पीड की उम्मीद कर रहे थे, तो केबल इसे सपोर्ट नहीं कर सकता।";
 "Optical" = "ऑप्टिकल";

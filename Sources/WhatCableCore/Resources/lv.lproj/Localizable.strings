@@ -58,7 +58,8 @@
 "Linked at %@" = "Savienots ar %@";
 "Negotiation hasn't completed yet." = "Saskaņošana vēl nav pabeigta.";
 "No USB-C / MagSafe ports were found on this Mac." = "Šajā Mac netika atrasti USB-C / MagSafe porti.";
-"No e-marker detected. The cable may have one, but macOS only checks above 3A." = "E-marķieris nav konstatēts. Kabelim tāds var būt, bet macOS pārbauda tikai virs 3 A.";
+"No e-marker detected. This cable doesn't advertise its capabilities." = "E-marķieris nav konstatēts. Šis kabelis neziņo par savām spējām.";
+"No e-marker detected. The cable may have one, but macOS only reads it above 3A or with Thunderbolt." = "E-marķieris nav konstatēts. Kabelim tāds var būt, bet macOS to nolasa tikai virs 3 A vai ar Thunderbolt.";
 "Nothing connected" = "Nekas nav pievienots";
 "Only USB 2.0 is active. If you expected high speed, the cable may not support it." = "Tikai USB 2.0 ir aktīvs. Ja gaidījāt lielu ātrumu, iespējams, kabelis to neatbalsta.";
 "Optical" = "Optisks";

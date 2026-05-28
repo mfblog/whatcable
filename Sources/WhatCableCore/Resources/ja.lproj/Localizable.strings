@@ -58,7 +58,8 @@
 "Linked at %@" = "%@でリンク";
 "Negotiation hasn't completed yet." = "ネゴシエーションがまだ完了していません。";
 "No USB-C / MagSafe ports were found on this Mac." = "このMacにUSB-C / MagSafeポートが見つかりませんでした。";
-"No e-marker detected. The cable may have one, but macOS only checks above 3A." = "e-markerが検出されません。ケーブルに搭載されている可能性はありますが、macOSは3 A以上の場合のみ確認します。";
+"No e-marker detected. This cable doesn't advertise its capabilities." = "e-markerが検出されません。このケーブルは性能情報を公開していません。";
+"No e-marker detected. The cable may have one, but macOS only reads it above 3A or with Thunderbolt." = "e-markerが検出されません。ケーブルに搭載されている可能性はありますが、macOSは3 A以上またはThunderbolt接続時のみ読み取ります。";
 "Nothing connected" = "未接続";
 "Only USB 2.0 is active. If you expected high speed, the cable may not support it." = "USB 2.0のみがアクティブです。高速を期待していた場合、ケーブルが対応していない可能性があります。";
 "Optical" = "光学";
