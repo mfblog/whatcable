@@ -1,9 +1,12 @@
 import SwiftUI
 import AppKit
 import Combine
+import os.log
 import WhatCableCore
 import WhatCableAppKit
 import WhatCablePlugins
+
+private let log = Logger(subsystem: "uk.whatcable.whatcable", category: "lifecycle")
 
 @main
 struct WhatCableApp: App {
@@ -79,18 +82,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
     private var cancellables: Set<AnyCancellable> = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        log.info("launch: version=\(AppInfo.version, privacy: .public) macOS=\(ProcessInfo.processInfo.operatingSystemVersionString, privacy: .public)")
+        registerWidgetExtension()
         NSWindow.allowsAutomaticWindowTabbing = false
 
-        // Override the process name so the About panel and menus use the
-        // app name even though the SwiftPM executable name might differ.
         ProcessInfo.processInfo.setValue(AppInfo.name, forKey: "processName")
 
         WatcherHub.shared.start()
         NotificationManager.shared.start()
         WidgetDataWriter.shared.start()
         UpdateChecker.shared.start()
+        log.info("launch: subsystems started")
 
         applyDisplayMode(menuBar: AppSettings.shared.useMenuBarMode)
+        log.info("launch: display mode applied, menuBar=\(AppSettings.shared.useMenuBarMode)")
 
         // Live-switch when the user flips the toggle in Settings.
         AppSettings.shared.$useMenuBarMode
@@ -128,7 +133,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
     /// mode, window in desktop mode) without changing any navigation
     /// state. Used when navigation is triggered from outside the popover.
     private func presentMainSurface() {
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.activate()
         if AppSettings.shared.useMenuBarMode {
             if let button = statusItem?.button, let popover, !popover.isShown {
                 togglePopover(from: button)
@@ -157,7 +162,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
             tearDownMenuBarMode()
             NSApp.setActivationPolicy(.regular)
             setUpWindowMode()
-            NSApp.activate(ignoringOtherApps: true)
+            NSApp.activate()
         }
     }
 
@@ -166,10 +171,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
             let p = NSPopover()
             p.behavior = Self.refreshSignal.keepOpen ? .applicationDefined : .transient
             p.animates = true
-            // Size to the SwiftUI content instead of a fixed box, so a
-            // near-empty popover isn't half the screen (issue #159) and a
-            // Pro screen gets the room it needs. ContentView caps its own
-            // max size and scrolls past it.
             let host = NSHostingController(
                 rootView: ContentView().environmentObject(Self.refreshSignal)
             )
@@ -177,19 +178,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
             p.contentViewController = host
             p.delegate = self
             popover = p
+            log.info("menuBar: popover created")
         }
         if statusItem == nil {
             let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
             if let button = item.button {
                 button.image = NSImage(systemSymbolName: "cable.connector", accessibilityDescription: AppInfo.name)
                 if button.image == nil {
+                    log.warning("menuBar: cable.connector SF Symbol returned nil, using text fallback")
                     button.title = "WC"
                 }
                 button.target = self
                 button.action = #selector(handleClick(_:))
                 button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+                log.info("menuBar: statusItem button configured, hasImage=\(button.image != nil), frame=\(button.frame.debugDescription, privacy: .public)")
+            } else {
+                log.error("menuBar: statusItem.button is nil, removing broken item")
+                NSStatusBar.system.removeStatusItem(item)
+                return
             }
             statusItem = item
+            log.info("menuBar: statusItem created, isVisible=\(item.isVisible)")
         }
     }
 
@@ -308,7 +317,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
 
 
     private func showSettings() {
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.activate()
         Self.refreshSignal.showSettings = true
         if AppSettings.shared.useMenuBarMode {
             if let button = statusItem?.button, let popover, !popover.isShown {
@@ -324,7 +333,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
     }
 
     @objc func showAboutPanel() {
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.activate()
         let credits = NSAttributedString(
             string: "\(AppInfo.tagline)\n\n\(AppInfo.credit)",
             attributes: [
@@ -357,6 +366,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
 
     @objc private func menuQuit() {
         NSApp.terminate(nil)
+    }
+
+    // MARK: - Widget extension registration
+
+    /// Tell PluginKit about our widget extension on every launch.
+    ///
+    /// Launch Services can accumulate stale extension entries across app
+    /// upgrades (especially Homebrew cask upgrades). When pkd sees multiple
+    /// entries for the same bundle ID, its dedup logic can reject all of
+    /// them, leaving "Final plugin count: 0" and no widget in the gallery.
+    /// Explicitly adding the appex bypasses the stale-entry collision.
+    private func registerWidgetExtension() {
+        guard let appexURL = Bundle.main.builtInPlugInsURL?
+            .appendingPathComponent("WhatCableWidget.appex") else { return }
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/pluginkit")
+        task.arguments = ["-a", appexURL.path]
+        task.standardOutput = FileHandle.nullDevice
+        task.standardError = FileHandle.nullDevice
+        do {
+            try task.run()
+            task.waitUntilExit()
+            if task.terminationStatus == 0 {
+                log.info("launch: registered widget extension via pluginkit")
+            } else {
+                log.warning("launch: pluginkit -a exited with status \(task.terminationStatus)")
+            }
+        } catch {
+            log.warning("launch: pluginkit -a failed: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     // MARK: - NSPopoverDelegate

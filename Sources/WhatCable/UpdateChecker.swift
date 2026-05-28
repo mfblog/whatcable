@@ -135,7 +135,7 @@ final class UpdateChecker: ObservableObject {
         // restore accessory policy after dismissal.
         let originalPolicy = NSApp.activationPolicy()
         NSApp.setActivationPolicy(.regular)
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.activate()
 
         let alert = NSAlert()
         alert.messageText = title
@@ -149,7 +149,7 @@ final class UpdateChecker: ObservableObject {
     private func showUpdateAlert(_ update: AvailableUpdate) {
         let originalPolicy = NSApp.activationPolicy()
         NSApp.setActivationPolicy(.regular)
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.activate()
 
         let alert = NSAlert()
         alert.messageText = "WhatCable \(update.version) is available"

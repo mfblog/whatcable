@@ -21,7 +21,7 @@ final class DetachedProWindowManager: NSObject, NSWindowDelegate {
     func open(route: ProScreenRoute) {
         let key = Self.key(for: route)
         if let existing = windows[key] {
-            NSApp.activate(ignoringOtherApps: true)
+            NSApp.activate()
             existing.makeKeyAndOrderFront(nil)
             return
         }
@@ -39,7 +39,7 @@ final class DetachedProWindowManager: NSObject, NSWindowDelegate {
         window.delegate = self
         window.center()
         windows[key] = window
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.activate()
         window.makeKeyAndOrderFront(nil)
     }
 
@@ -47,7 +47,7 @@ final class DetachedProWindowManager: NSObject, NSWindowDelegate {
     /// return true so the caller can skip rendering it in-place too.
     func focusIfOpen(route: ProScreenRoute) -> Bool {
         guard let existing = windows[Self.key(for: route)] else { return false }
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.activate()
         existing.makeKeyAndOrderFront(nil)
         return true
     }
