@@ -62,6 +62,12 @@ public struct DisplayDiagnostic {
         public let rateDescription: String?
         /// "HDMI" / "DVI" / "VGA" when an adapter is in the chain, else nil.
         public let sinkType: String?
+        /// The adapter / branch device's reported DisplayPort version, e.g.
+        /// "DisplayPort 1.2", from the DP node's `BranchDeviceID`. nil for a
+        /// direct connection or when the field is absent. Descriptive only:
+        /// it is what the device reports about itself, paired with the
+        /// demonstrated lane usage to explain a cap.
+        public let branchDevice: String?
     }
 
     /// Whether the cable can be implicated in a shortfall. Deliberately has
@@ -135,6 +141,7 @@ extension DisplayDiagnostic {
             Double(lanes) * $0 * Self.codingEfficiency(perLaneGbps: $0)
         }
         let sinkType = Self.adapterSinkType(dp.dfpType)
+        let branchDevice = Self.branchDeviceLabel(dp.branchDeviceId)
 
         // Cable attribution. Exonerate only on demonstrated evidence: a
         // Thunderbolt / USB4 tunnel (the cable carries far more than any DP
@@ -160,7 +167,8 @@ extension DisplayDiagnostic {
                 maxRefreshHz: nil,
                 neededGbps: nil, deliveredGbps: delivered,
                 lanes: lanes, maxLanes: maxLanes,
-                rateDescription: rate, sinkType: sinkType
+                rateDescription: rate, sinkType: sinkType,
+                branchDevice: branchDevice
             )
             self.bottleneck = .unknownMode
             self.summary = String(localized: "Display connected", bundle: _coreLocalizedBundle)
@@ -188,7 +196,8 @@ extension DisplayDiagnostic {
             neededGbps: needed,
             deliveredGbps: delivered,
             lanes: lanes, maxLanes: maxLanes,
-            rateDescription: rate, sinkType: sinkType
+            rateDescription: rate, sinkType: sinkType,
+            branchDevice: branchDevice
         )
 
         // Without a delivered figure (unparseable rate string) we can't
@@ -230,7 +239,11 @@ extension DisplayDiagnostic {
             self.facts = baseFacts
             self.bottleneck = .adapterLimit
             self.summary = String(localized: "Video is going through a \(sinkType) adapter", bundle: _coreLocalizedBundle)
-            self.detail = String(localized: "Your \(name) is reached through a USB-C to \(sinkType) adapter, and the link isn't currently carrying the monitor's top mode (\(canDo), about \(needLabel)); it's carrying about \(haveLabel) (\(laneLabel)). With an adapter in the chain, the adapter's own limit may be the cap rather than the cable. Trying the monitor over native DisplayPort, or a higher-spec adapter, would tell you which.", bundle: _coreLocalizedBundle) + dscCaveat
+            if let branchDevice {
+                self.detail = String(localized: "Your \(name) is reached through a USB-C to \(sinkType) adapter that reports as \(branchDevice), currently carrying about \(haveLabel) (\(laneLabel)), short of the monitor's top mode (\(canDo), about \(needLabel)). With an adapter in the chain, the adapter's own limit may be the cap rather than the cable. A native DisplayPort connection, or a higher-spec adapter, would tell you which.", bundle: _coreLocalizedBundle) + dscCaveat
+            } else {
+                self.detail = String(localized: "Your \(name) is reached through a USB-C to \(sinkType) adapter, and the link isn't currently carrying the monitor's top mode (\(canDo), about \(needLabel)); it's carrying about \(haveLabel) (\(laneLabel)). With an adapter in the chain, the adapter's own limit may be the cap rather than the cable. Trying the monitor over native DisplayPort, or a higher-spec adapter, would tell you which.", bundle: _coreLocalizedBundle) + dscCaveat
+            }
             return
         }
 
@@ -268,6 +281,23 @@ extension DisplayDiagnostic {
     /// (<= 8.1 Gbps/lane), 128b/132b (~0.97) for UHBR (>= 10 Gbps/lane).
     static func codingEfficiency(perLaneGbps: Double) -> Double {
         perLaneGbps >= 10 ? 0.9697 : 0.8
+    }
+
+    /// Friendly label for the DP node's `BranchDeviceID`, the version the
+    /// adapter / branch device reports for itself. Observed format is "Dp1.2"
+    /// (a USB-C to HDMI adapter reporting DisplayPort 1.2). Normalised to
+    /// "DisplayPort 1.2"; anything that doesn't match the "Dp<version>" shape
+    /// is surfaced as-is so we never hide or mangle an unfamiliar value.
+    /// Returns nil for a direct connection or an empty field.
+    static func branchDeviceLabel(_ raw: String?) -> String? {
+        guard let raw = raw?.trimmingCharacters(in: .whitespaces), !raw.isEmpty else { return nil }
+        if raw.lowercased().hasPrefix("dp") {
+            let version = raw.dropFirst(2).trimmingCharacters(in: .whitespaces)
+            if !version.isEmpty, version.first?.isNumber == true {
+                return "DisplayPort \(version)"
+            }
+        }
+        return raw
     }
 
     /// Map a downstream-facing-port type to an adapter sink type, or nil when

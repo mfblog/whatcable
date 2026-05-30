@@ -24,6 +24,7 @@ struct DisplayDiagnosticTests {
         rateDesc: String? = "5.4 Gbps (HBR2)",
         tunneled: Bool = false,
         dfpType: String? = nil,
+        branchDeviceId: String? = nil,
         edidData: Data? = nil
     ) -> IOPortTransportStateDisplayPort {
         IOPortTransportStateDisplayPort(
@@ -42,7 +43,8 @@ struct DisplayDiagnosticTests {
                     yearOfManufacture: nil, edid: $0
                 )
             },
-            dfpType: dfpType
+            dfpType: dfpType,
+            branchDeviceId: branchDeviceId
         )
     }
 
@@ -205,6 +207,38 @@ struct DisplayDiagnosticTests {
             parentPortNumber: 4
         )
         #expect(dp.portKey == "2/4")
+    }
+
+    // MARK: - Branch device
+
+    @Test("Names the adapter's reported DisplayPort version in the verdict")
+    func adapterNamesBranchDevice() throws {
+        // The real G34w case: HDMI adapter reporting "Dp1.2", 2 of 4 lanes.
+        let dp = makeDP(lanes: 2, dfpType: "HDMI", branchDeviceId: "Dp1.2")
+        let diag = try #require(DisplayDiagnostic(dp: dp, edid: g34w))
+        #expect(diag.bottleneck == .adapterLimit)
+        #expect(diag.facts.branchDevice == "DisplayPort 1.2")
+        #expect(diag.detail.contains("DisplayPort 1.2"))
+    }
+
+    @Test("Adapter with no branch device keeps the plain wording")
+    func adapterNoBranchDevice() throws {
+        let dp = makeDP(lanes: 2, dfpType: "HDMI", branchDeviceId: nil)
+        let diag = try #require(DisplayDiagnostic(dp: dp, edid: g34w))
+        #expect(diag.bottleneck == .adapterLimit)
+        #expect(diag.facts.branchDevice == nil)
+        #expect(!diag.detail.contains("reports as"))
+    }
+
+    @Test("branchDeviceLabel normalises the Dp version and falls back safely")
+    func branchDeviceLabelParse() {
+        #expect(DisplayDiagnostic.branchDeviceLabel("Dp1.2") == "DisplayPort 1.2")
+        #expect(DisplayDiagnostic.branchDeviceLabel("DP2.1") == "DisplayPort 2.1")
+        #expect(DisplayDiagnostic.branchDeviceLabel("  Dp 1.4 ") == "DisplayPort 1.4")
+        #expect(DisplayDiagnostic.branchDeviceLabel("CustomHub") == "CustomHub")
+        #expect(DisplayDiagnostic.branchDeviceLabel("dp") == "dp")
+        #expect(DisplayDiagnostic.branchDeviceLabel("") == nil)
+        #expect(DisplayDiagnostic.branchDeviceLabel(nil) == nil)
     }
 
     @Test("Parses per-lane Gbps from the macOS rate description")

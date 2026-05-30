@@ -573,6 +573,9 @@ private struct DisplayDTO: Codable {
     let rate: String?
     /// "HDMI" / "DVI" / "VGA" when an adapter is in the chain, else nil.
     let sinkType: String?
+    /// The adapter / branch device's reported DisplayPort version, e.g.
+    /// "DisplayPort 1.2". nil for a direct connection.
+    let branchDevice: String?
     /// Cable attribution: "unlikelyTheCable" or "inconclusive". Never blames
     /// the cable (only ever exonerates it on demonstrated evidence).
     let cableAssessment: String
@@ -599,6 +602,7 @@ private struct DisplayDTO: Codable {
         self.maxLanes = facts.maxLanes
         self.rate = facts.rateDescription
         self.sinkType = facts.sinkType
+        self.branchDevice = facts.branchDevice
     }
 }
 
