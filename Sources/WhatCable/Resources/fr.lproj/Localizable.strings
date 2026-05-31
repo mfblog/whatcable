@@ -84,10 +84,10 @@
 "Privacy" = "Confidentialité";
 "Pro" = "Pro";
 "Proceed" = "Continuer";
-"Raw IOKit registry properties for each USB-C port, your macOS version, and chip type. This is the same data visible in System Information." = "Les propriétés brutes du registre IOKit pour chaque port USB-C, votre version de macOS et le type de puce. Ce sont les mêmes données visibles dans System Information.";
+"Raw IOKit registry properties for each USB-C port, the model and capabilities of any connected display (its EDID, with the serial number removed), your macOS version, and chip type. This is the same data visible in System Information." = "Propriétés brutes du registre IOKit pour chaque port USB-C, le modèle et les capacités de tout écran connecté (son EDID, avec le numéro de série retiré), votre version de macOS et le type de puce. Ce sont les mêmes données que celles visibles dans Informations système.";
 "What happens" = "Ce qui se passe";
 "What is collected" = "Ce qui est collecté";
-"WhatCable runs 13 IOKit probes that read raw USB-C and Thunderbolt data from your Mac's port controller registers. The results are sent to a secure server to help improve cable and port detection." = "WhatCable exécute 13 sondes IOKit qui lisent les données brutes USB-C et Thunderbolt depuis les registres du contrôleur de port de votre Mac. Les résultats sont envoyés à un serveur sécurisé pour aider à améliorer la détection des câbles et des ports.";
+"WhatCable runs 14 IOKit probes that read raw USB-C and Thunderbolt data from your Mac's port controller registers. The results are sent to a secure server to help improve cable and port detection." = "WhatCable exécute 14 sondes IOKit qui lisent les données brutes USB-C et Thunderbolt depuis les registres du contrôleur de port de votre Mac. Les résultats sont envoyés à un serveur sécurisé pour aider à améliorer la détection des câbles et des ports.";
 "Your machine's hardware UUID is hashed with SHA-256 before sending. No names, accounts, serial numbers, or personal data are collected or stored." = "L'UUID matériel de votre machine est haché avec SHA-256 avant l'envoi. Aucun nom, compte, numéro de série ou donnée personnelle n'est collecté ou stocké.";
 
 /* Negotiation diagnostics + Pro UX (PR #55). English; non-English to be refined by the community translation flow. */
@@ -98,3 +98,18 @@
 "Negotiation Diagnostics" = "Negotiation Diagnostics";
 "Cable Diagnostics" = "Cable Diagnostics";
 "%@ Port %lld Diagnostics" = "%@ Port %lld Diagnostics";
+
+/* Onboarding / welcome screen (first launch). */
+"Welcome to WhatCable" = "Bienvenue dans WhatCable";
+"See what your USB-C cables, chargers, and devices can actually do." = "Découvrez ce que vos câbles USB-C, chargeurs et appareils peuvent vraiment faire.";
+"How would you like to use WhatCable?" = "Comment souhaitez-vous utiliser WhatCable ?";
+"Menu bar" = "Barre des menus";
+"Sits in the menu bar at the top of your screen. Click the cable icon any time to check a connection." = "Se place dans la barre des menus en haut de votre écran. Cliquez sur l'icône du câble à tout moment pour vérifier une connexion.";
+"Recommended" = "Recommandé";
+"Dock app" = "App dans le Dock";
+"Opens as a regular window with a Dock icon, like most apps." = "S'ouvre comme une fenêtre normale avec une icône dans le Dock, comme la plupart des apps.";
+"Get Started" = "Commencer";
+"You can change this any time in Settings." = "Vous pouvez changer cela à tout moment dans les Réglages.";
+
+/* Billboard device (display dimension). English; community-refined. */
+"Billboard device present" = "Billboard device present";

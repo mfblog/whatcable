@@ -1,0 +1,227 @@
+import Foundation
+
+public struct PowerSample: Codable, Sendable, Equatable {
+    public let timestamp: Date
+    public let systemVoltageIn: Int
+    public let systemCurrentIn: Int
+    public let systemPowerIn: Int
+
+    public init(timestamp: Date, systemVoltageIn: Int, systemCurrentIn: Int, systemPowerIn: Int) {
+        self.timestamp = timestamp
+        self.systemVoltageIn = systemVoltageIn
+        self.systemCurrentIn = systemCurrentIn
+        self.systemPowerIn = systemPowerIn
+    }
+}
+
+public struct PortPowerSample: Codable, Sendable, Equatable {
+    public let portIndex: Int
+    public let portKey: String
+    public let current: Int
+    public let watts: Int
+    public let configuredVoltage: Int
+    public let configuredCurrent: Int
+    public let adapterVoltage: Int
+    public let vconnCurrent: Int
+    public let vconnPower: Int
+    /// Smoothed power reading (centiwatts).
+    public let filteredPower: Int
+    /// PD contract negotiated power (mW).
+    public let pdPowerMW: Int
+    /// Maximum VConn current the cable claimed (mA).
+    public let vconnMaxCurrent: Int
+    /// Lifetime accumulated energy through this port.
+    public let accumulatedPower: Int
+    /// Number of energy measurement samples taken.
+    public let accumulatorCount: Int
+    /// Number of energy measurement errors.
+    public let accumulatorErrorCount: Int
+    /// Lifetime VConn energy accumulated.
+    public let vconnAccumulatedPower: Int
+    /// VConn energy sample count.
+    public let vconnAccumulatorCount: Int
+    /// VConn energy measurement errors.
+    public let vconnAccumulatorErrorCount: Int
+    /// Number of liquid detection collision events on this port.
+    public let numLDCMCollisions: Int
+    /// Reserved sleep power for USB devices (mW).
+    public let usbSleepPoolPowerMW: Int
+    /// Reserved wake power for USB devices (mW).
+    public let usbWakePoolPowerMW: Int
+    /// Power delivery state.
+    public let powerState: Int
+    /// Port type identifier.
+    public let portType: Int
+    // True when the sample came from PortControllerInfo (contracted/port-max
+    // only, no live per-port metering). Voltage is unrecoverable in this
+    // path, so configuredVoltage stays 0 and the UI shows the honest
+    // contracted-max card instead of a synthesized live reading.
+    public let isContractedFallback: Bool
+
+    public init(
+        portIndex: Int,
+        portKey: String = "",
+        current: Int,
+        watts: Int,
+        configuredVoltage: Int,
+        configuredCurrent: Int,
+        adapterVoltage: Int,
+        vconnCurrent: Int,
+        vconnPower: Int,
+        filteredPower: Int = 0,
+        pdPowerMW: Int = 0,
+        vconnMaxCurrent: Int = 0,
+        accumulatedPower: Int = 0,
+        accumulatorCount: Int = 0,
+        accumulatorErrorCount: Int = 0,
+        vconnAccumulatedPower: Int = 0,
+        vconnAccumulatorCount: Int = 0,
+        vconnAccumulatorErrorCount: Int = 0,
+        numLDCMCollisions: Int = 0,
+        usbSleepPoolPowerMW: Int = 0,
+        usbWakePoolPowerMW: Int = 0,
+        powerState: Int = 0,
+        portType: Int = 0,
+        isContractedFallback: Bool = false
+    ) {
+        self.portIndex = portIndex
+        self.portKey = portKey
+        self.current = current
+        self.watts = watts
+        self.configuredVoltage = configuredVoltage
+        self.configuredCurrent = configuredCurrent
+        self.adapterVoltage = adapterVoltage
+        self.vconnCurrent = vconnCurrent
+        self.vconnPower = vconnPower
+        self.filteredPower = filteredPower
+        self.pdPowerMW = pdPowerMW
+        self.vconnMaxCurrent = vconnMaxCurrent
+        self.accumulatedPower = accumulatedPower
+        self.accumulatorCount = accumulatorCount
+        self.accumulatorErrorCount = accumulatorErrorCount
+        self.vconnAccumulatedPower = vconnAccumulatedPower
+        self.vconnAccumulatorCount = vconnAccumulatorCount
+        self.vconnAccumulatorErrorCount = vconnAccumulatorErrorCount
+        self.numLDCMCollisions = numLDCMCollisions
+        self.usbSleepPoolPowerMW = usbSleepPoolPowerMW
+        self.usbWakePoolPowerMW = usbWakePoolPowerMW
+        self.powerState = powerState
+        self.portType = portType
+        self.isContractedFallback = isContractedFallback
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case portIndex, portKey, current, watts, configuredVoltage
+        case configuredCurrent, adapterVoltage, vconnCurrent, vconnPower
+        case filteredPower, pdPowerMW, vconnMaxCurrent
+        case accumulatedPower, accumulatorCount, accumulatorErrorCount
+        case vconnAccumulatedPower, vconnAccumulatorCount, vconnAccumulatorErrorCount
+        case numLDCMCollisions, usbSleepPoolPowerMW, usbWakePoolPowerMW
+        case powerState, portType
+        case isContractedFallback
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        portIndex = try c.decode(Int.self, forKey: .portIndex)
+        portKey = try c.decode(String.self, forKey: .portKey)
+        current = try c.decode(Int.self, forKey: .current)
+        watts = try c.decode(Int.self, forKey: .watts)
+        configuredVoltage = try c.decode(Int.self, forKey: .configuredVoltage)
+        configuredCurrent = try c.decode(Int.self, forKey: .configuredCurrent)
+        adapterVoltage = try c.decode(Int.self, forKey: .adapterVoltage)
+        vconnCurrent = try c.decode(Int.self, forKey: .vconnCurrent)
+        vconnPower = try c.decode(Int.self, forKey: .vconnPower)
+        filteredPower = try c.decodeIfPresent(Int.self, forKey: .filteredPower) ?? 0
+        pdPowerMW = try c.decodeIfPresent(Int.self, forKey: .pdPowerMW) ?? 0
+        vconnMaxCurrent = try c.decodeIfPresent(Int.self, forKey: .vconnMaxCurrent) ?? 0
+        accumulatedPower = try c.decodeIfPresent(Int.self, forKey: .accumulatedPower) ?? 0
+        accumulatorCount = try c.decodeIfPresent(Int.self, forKey: .accumulatorCount) ?? 0
+        accumulatorErrorCount = try c.decodeIfPresent(Int.self, forKey: .accumulatorErrorCount) ?? 0
+        vconnAccumulatedPower = try c.decodeIfPresent(Int.self, forKey: .vconnAccumulatedPower) ?? 0
+        vconnAccumulatorCount = try c.decodeIfPresent(Int.self, forKey: .vconnAccumulatorCount) ?? 0
+        vconnAccumulatorErrorCount = try c.decodeIfPresent(Int.self, forKey: .vconnAccumulatorErrorCount) ?? 0
+        numLDCMCollisions = try c.decodeIfPresent(Int.self, forKey: .numLDCMCollisions) ?? 0
+        usbSleepPoolPowerMW = try c.decodeIfPresent(Int.self, forKey: .usbSleepPoolPowerMW) ?? 0
+        usbWakePoolPowerMW = try c.decodeIfPresent(Int.self, forKey: .usbWakePoolPowerMW) ?? 0
+        powerState = try c.decodeIfPresent(Int.self, forKey: .powerState) ?? 0
+        portType = try c.decodeIfPresent(Int.self, forKey: .portType) ?? 0
+        isContractedFallback = try c.decodeIfPresent(Bool.self, forKey: .isContractedFallback) ?? false
+    }
+}
+
+public struct CableResistanceEstimate: Codable, Sendable, Equatable {
+    public enum Status: String, Codable, Sendable {
+        case insufficient
+        case converging
+        case stable
+        case unreliable
+    }
+
+    public let milliohms: Double
+    public let sampleCount: Int
+    public let rSquared: Double
+    public let status: Status
+
+    public init(milliohms: Double, sampleCount: Int, rSquared: Double, status: Status) {
+        self.milliohms = milliohms
+        self.sampleCount = sampleCount
+        self.rSquared = rSquared
+        self.status = status
+    }
+
+    /// How a stable resistance reading rates against the USB-C spec budget.
+    public enum Tier: String, Sendable {
+        /// Comfortably within the spec budget.
+        case good
+        /// Within the budget but approaching the ceiling.
+        case marginal
+        /// At or over the spec budget: out of spec for this cable's rating.
+        case high
+    }
+
+    /// Classify the resistance against the USB Type-C IR-drop budget
+    /// (spec §4.4.1), which the estimate measures as the VBUS+GND loop (the
+    /// Mac can only sense VBUS relative to its own ground, so its reading
+    /// includes the GND return drop). The budget is current-rated, so a 5 A
+    /// cable's ceiling is tighter than a 3 A's:
+    ///
+    /// - 5 A loop budget ≈ 150 mΩ → Good < 100, Marginal 100–150, High > 150.
+    /// - 3 A loop budget ≈ 250 mΩ → Good < 165, Marginal 165–250, High > 250.
+    ///
+    /// Full working: `research/cable-resistance-thresholds.md`.
+    ///
+    /// - Parameter ratedFiveA: whether the cable is a 5 A-class cable. Pass
+    ///   `true` only when known (e.g. the negotiated contract exceeded 3 A,
+    ///   which only a 5 A-rated cable allows). Default `false` applies the
+    ///   looser 3 A budget so a lightly-loaded 5 A cable is never over-flagged.
+    /// - Returns: the tier, or `nil` when the estimate isn't `stable` (no
+    ///   trustworthy reading yet).
+    public func tier(ratedFiveA: Bool) -> Tier? {
+        guard status == .stable else { return nil }
+        let goodBelow = ratedFiveA ? 100.0 : 165.0
+        let budget = ratedFiveA ? 150.0 : 250.0
+        if milliohms < goodBelow { return .good }
+        if milliohms <= budget { return .marginal }
+        return .high
+    }
+}
+
+public struct PowerMonitorSnapshot: Codable, Sendable, Equatable {
+    public let timestamp: Date
+    public let systemSample: PowerSample
+    public let portSamples: [PortPowerSample]
+    public let resistanceEstimate: CableResistanceEstimate?
+
+    public init(
+        timestamp: Date,
+        systemSample: PowerSample,
+        portSamples: [PortPowerSample],
+        resistanceEstimate: CableResistanceEstimate?
+    ) {
+        self.timestamp = timestamp
+        self.systemSample = systemSample
+        self.portSamples = portSamples
+        self.resistanceEstimate = resistanceEstimate
+    }
+}

@@ -31,6 +31,17 @@ struct USB3TransportTests {
         #expect(t.speedLabel == nil)
     }
 
+    @Test("Zero signaling returns nil (IOKit None sentinel)")
+    func zeroSignalingReturnsNil() {
+        // SuperSpeedSignaling == 0 with description "None" appears on
+        // CIO-tunneled USB3 and idle USB-C ports across all probed Apple
+        // Silicon machines. It must not produce "USB 3.2 Gen 0" in the UI
+        // (whatcable issue #190 follow-up). Falls through to the generic
+        // "SuperSpeed USB (5 Gbps or faster)" text downstream.
+        let t = USB3Transport(id: 5, portKey: "2/1", signaling: 0, signalingDescription: "None", dataRole: "host")
+        #expect(t.speedLabel == nil)
+    }
+
     // MARK: - Equatable / Hashable
 
     @Test("Equal transports are equal")

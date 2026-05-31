@@ -83,10 +83,10 @@
 "Privacy" = "गोपनीयता";
 "Pro" = "Pro";
 "Proceed" = "आगे बढ़ें";
-"Raw IOKit registry properties for each USB-C port, your macOS version, and chip type. This is the same data visible in System Information." = "हर USB-C पोर्ट के लिए रॉ IOKit रजिस्ट्री प्रॉपर्टीज़, आपका macOS संस्करण, और चिप प्रकार। यह वही डेटा है जो System Information में दिखता है।";
+"Raw IOKit registry properties for each USB-C port, the model and capabilities of any connected display (its EDID, with the serial number removed), your macOS version, and chip type. This is the same data visible in System Information." = "Raw IOKit registry properties for each USB-C port, the model and capabilities of any connected display (its EDID, with the serial number removed), your macOS version, and chip type. This is the same data visible in System Information.";
 "What happens" = "क्या होता है";
 "What is collected" = "क्या एकत्र किया जाता है";
-"WhatCable runs 13 IOKit probes that read raw USB-C and Thunderbolt data from your Mac's port controller registers. The results are sent to a secure server to help improve cable and port detection." = "WhatCable 13 IOKit प्रोब चलाता है जो आपके Mac के पोर्ट कंट्रोलर रजिस्टर से रॉ USB-C और Thunderbolt डेटा पढ़ते हैं। केबल और पोर्ट डिटेक्शन सुधारने में मदद के लिए परिणाम एक सुरक्षित सर्वर पर भेजे जाते हैं।";
+"WhatCable runs 14 IOKit probes that read raw USB-C and Thunderbolt data from your Mac's port controller registers. The results are sent to a secure server to help improve cable and port detection." = "WhatCable 14 IOKit प्रोब चलाता है जो आपके Mac के पोर्ट कंट्रोलर रजिस्टर से रॉ USB-C और Thunderbolt डेटा पढ़ते हैं। केबल और पोर्ट डिटेक्शन सुधारने में मदद के लिए परिणाम एक सुरक्षित सर्वर पर भेजे जाते हैं।";
 "Your machine's hardware UUID is hashed with SHA-256 before sending. No names, accounts, serial numbers, or personal data are collected or stored." = "भेजने से पहले आपकी मशीन का हार्डवेयर UUID SHA-256 से हैश किया जाता है। कोई नाम, अकाउंट, सीरियल नंबर, या व्यक्तिगत डेटा एकत्र या संग्रहीत नहीं किया जाता।";
 
 /* Negotiation diagnostics + Pro UX (PR #55). English; non-English to be refined by the community translation flow. */
@@ -97,3 +97,18 @@
 "Negotiation Diagnostics" = "Negotiation Diagnostics";
 "Cable Diagnostics" = "Cable Diagnostics";
 "%@ Port %lld Diagnostics" = "%@ Port %lld Diagnostics";
+
+/* Onboarding / welcome screen (first launch). */
+"Welcome to WhatCable" = "WhatCable में आपका स्वागत है";
+"See what your USB-C cables, chargers, and devices can actually do." = "देखें कि आपके USB-C केबल, चार्जर और डिवाइस वास्तव में क्या कर सकते हैं।";
+"How would you like to use WhatCable?" = "आप WhatCable का उपयोग कैसे करना चाहेंगे?";
+"Menu bar" = "मेनू बार";
+"Sits in the menu bar at the top of your screen. Click the cable icon any time to check a connection." = "आपकी स्क्रीन के शीर्ष पर मेनू बार में रहता है। कनेक्शन जांचने के लिए किसी भी समय केबल आइकन पर क्लिक करें।";
+"Recommended" = "अनुशंसित";
+"Dock app" = "Dock ऐप";
+"Opens as a regular window with a Dock icon, like most apps." = "अधिकांश ऐप्स की तरह Dock आइकन के साथ एक सामान्य विंडो के रूप में खुलता है।";
+"Get Started" = "शुरू करें";
+"You can change this any time in Settings." = "आप इसे कभी भी सेटिंग्स में बदल सकते हैं।";
+
+/* Billboard device (display dimension). English; community-refined. */
+"Billboard device present" = "Billboard device present";

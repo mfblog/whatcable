@@ -1,6 +1,9 @@
 ---
-title: "Hello, world"
-summary: "Kicking off the WhatCable blog. What you'll find here, what to expect, and how to subscribe."
+title: Hello, world
+slug: hello-world
+date: 2026-05-20
+summary: Kicking off the WhatCable blog. What you'll find here, what to expect,
+  and how to subscribe.
 category: Notes
 tags:
   - announcements

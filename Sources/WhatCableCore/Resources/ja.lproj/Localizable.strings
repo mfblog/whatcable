@@ -16,8 +16,10 @@
 "Cable does not advertise an e-marker (basic cable)" = "ケーブルはe-markerを持っていません（ベーシックケーブル）";
 "Cable has an e-marker chip (advertises its capabilities)" = "ケーブルにe-markerチップあり（性能を通知）";
 "Cable is limiting charging speed" = "ケーブルが充電速度を制限しています";
+"Cable identified as %@" = "ケーブルは%@と識別されました";
 "Cable made by %@" = "製造元: %@";
 "Cable rated for %@ at up to %lldV (~%lldW)" = "ケーブル定格: %1$@、最大%2$lld V（約%3$lld W）";
+"Cable rated to %lldV / %@, delivers up to %lldW (USB-PD caps at 48V)" = "Cable rated to %1$lldV / %2$@, delivers up to %3$lldW (USB-PD caps at 48V)";
 "Cable speed: %@" = "ケーブル速度: %@";
 "Cable trust signals:" = "ケーブル信頼性シグナル:";
 "Carrying DisplayPort video" = "DisplayPort映像を伝送中";
@@ -34,6 +36,7 @@
 "Charging well at %lldW" = "%lld Wで良好に充電中";
 "Charging · %lldW charger" = "充電中 · %lld W充電器";
 "Charging: " = "充電: ";
+"Connected devices:" = "接続されたデバイス:";
 "Connected" = "接続済み";
 "Connected device: %@, %@" = "接続デバイス: %1$@、%2$@";
 "Connected to %@" = "%@に接続";
@@ -44,7 +47,7 @@
 "Currently negotiated: %@ @ %@ (%@)" = "現在のネゴシエーション: %1$@ @ %2$@ (%3$@)";
 "Display connected" = "ディスプレイ接続";
 "Display connected · %lldW charger" = "ディスプレイ接続 · %lld W充電器";
-"DisplayPort video over USB-C alt mode." = "USB-Cオルタネートモード経由のDisplayPort映像。";
+"DisplayPort video over USB-C Alt Mode." = "USB-Cオルタネートモード経由のDisplayPort映像。";
 "E-marker claims EPR support but reports only 20V max VBUS" = "e-markerはEPR対応を通知していますがVBUS最大20 Vのみを報告";
 "E-marker reports no vendor identity" = "e-markerがベンダーIDを報告していません";
 "E-marker uses a reserved cable-latency value" = "e-markerが予約済みのケーブルレイテンシ値を使用";
@@ -52,12 +55,14 @@
 "E-marker uses a reserved data-speed value" = "e-markerが予約済みのデータ速度値を使用";
 "E-marker uses an invalid VDO version" = "e-markerが無効なVDOバージョンを使用";
 "E-marker uses an invalid cable-termination value" = "e-markerが無効なケーブル終端値を使用";
+"Fingerprint shared across %@" = "フィンガープリントは%@で共有されています";
 "Last leg drops from %@ to %@" = "最終区間で%1$@から%2$@に低下";
 "Legitimate USB-IF members ship cables with a non-zero vendor ID. A zeroed VID is a common counterfeit signature." = "正規のUSB-IFメンバーはゼロでないベンダーIDのケーブルを出荷します。ゼロのVIDは一般的な偽造品の特徴です。";
 "Linked at %@" = "%@でリンク";
 "Negotiation hasn't completed yet." = "ネゴシエーションがまだ完了していません。";
 "No USB-C / MagSafe ports were found on this Mac." = "このMacにUSB-C / MagSafeポートが見つかりませんでした。";
-"No e-marker detected. The cable may have one, but macOS only checks above 3A." = "e-markerが検出されません。ケーブルに搭載されている可能性はありますが、macOSは3 A以上の場合のみ確認します。";
+"No e-marker detected. This cable doesn't advertise its capabilities." = "e-markerが検出されません。このケーブルは性能情報を公開していません。";
+"No e-marker detected. The cable may have one, but macOS only reads it above 3A or with Thunderbolt." = "e-markerが検出されません。ケーブルに搭載されている可能性はありますが、macOSは3 A以上またはThunderbolt接続時のみ読み取ります。";
 "Nothing connected" = "未接続";
 "Only USB 2.0 is active. If you expected high speed, the cable may not support it." = "USB 2.0のみがアクティブです。高速を期待していた場合、ケーブルが対応していない可能性があります。";
 "Optical" = "光学";
@@ -122,7 +127,7 @@
 "Connected device: %@" = "接続デバイス: %@";
 "Connected device: %@, %@ (%@)" = "接続デバイス: %1$@、%2$@ (%3$@)";
 "Data" = "データ";
-"DisplayPort alt mode" = "DisplayPort オルタネートモード";
+"DisplayPort Alt Mode" = "DisplayPort オルタネートモード";
 
 
 /* Cable speed / charger status strings (previously missing keys) */
@@ -205,7 +210,7 @@
 "MagSafe Charger" = "MagSafe充電器";
 "Manufacturer" = "製造元";
 "Marginal" = "要注意";
-"Max current" = "最大電流";
+"Requested max operating current" = "要求最大動作電流";
 "Max power" = "最大電力";
 "Mitigations" = "緩和策";
 "Mode" = "モード";
@@ -224,7 +229,7 @@
 "No liquid detection data" = "液体検出データなし";
 "None" = "なし";
 "Open Pro diagnostics for this port" = "このポートのPro診断を開く";
-"Operating current" = "動作電流";
+"Requested operating current" = "要求動作電流";
 "PD protocol engine status changed. Tracks contract state, hard/soft reset counts, and message sequence numbers." = "PDプロトコルエンジンのステータスが変更。コントラクト状態、リセット回数、メッセージシーケンス番号を追跡します。";
 "PD spec revision" = "PD仕様リビジョン";
 "PD state" = "PD状態";
@@ -240,7 +245,6 @@
 "Power (W)" = "電力 (W)";
 "Power Contract" = "電力コントラクト";
 "Power Monitor" = "電力モニター";
-"Power Monitor requires WhatCable Pro." = "電力モニターにはWhatCable Proが必要です。";
 "Power delivery parameters changed (voltage, current, or power role)." = "給電パラメータが変更されました（電圧、電流、または電力ロール）。";
 "Power path status changed. Covers VBUS voltage, current draw, and source/sink transitions." = "電力パスのステータスが変更。VBUS電圧、消費電流、ソース/シンク切り替えをカバーします。";
 "Power role swap complete" = "電力ロール交換完了";
@@ -286,14 +290,13 @@
 "Unrecognised event code from the port controller." = "ポートコントローラーからの認識できないイベントコード。";
 "Unregistered cable (no e-marker)" = "未登録ケーブル（e-markerなし）";
 "Unstructured VDM enumeration began (discovering vendor-specific capabilities)." = "非構造化VDM列挙を開始（ベンダー固有性能を検出中）。";
-"Unstructured VDM status changed (vendor-specific messaging like alt mode setup)." = "非構造化VDMステータスが変更（オルタネートモード設定などのベンダー固有メッセージング）。";
+"Unstructured VDM status changed (vendor-specific messaging like Alt Mode setup)." = "非構造化VDMステータスが変更（オルタネートモード設定などのベンダー固有メッセージング）。";
 "VDO fail count" = "VDO失敗回数";
 "Vendor ID" = "ベンダーID";
-"Vendor-specific unstructured VDM state changed. Used by Apple for custom alt mode setup and Thunderbolt negotiation." = "ベンダー固有の非構造化VDM状態が変更。Appleがカスタムオルタネートモード設定とThunderboltネゴシエーションに使用。";
+"Vendor-specific unstructured VDM state changed. Used by Apple for custom Alt Mode setup and Thunderbolt negotiation." = "ベンダー固有の非構造化VDM状態が変更。Appleがカスタムオルタネートモード設定とThunderboltネゴシエーションに使用。";
 "Voltage" = "電圧";
 "Voltage (V)" = "電圧 (V)";
 "WhatCable Pro" = "WhatCable Pro";
-"WhatCable Pro required" = "WhatCable Proが必要";
 "Year of manufacture" = "製造年";
 "Yes" = "はい";
 "cable resistance estimate" = "ケーブル抵抗推定値";
@@ -310,8 +313,9 @@
 
 /* Pro plugin strings missing from prior export */
 "Enter Licence Key…" = "ライセンスキーを入力…";
-"Negotiated PD contract. This Mac doesn't report live per-port draw, so this is the agreed maximum, not a live measurement." = "ネゴシエーション済みPDコントラクト。このMacはポートごとのリアルタイム消費電力を報告しないため、合意された最大値であり、リアルタイム計測値ではありません。";
+"This is the most the charger and your Mac agreed to, not a live reading. Your Mac doesn't report power per port, so the live input is shown in the System Power Input chart below." = "これは充電器とお使いのMacが合意した最大値であり、実際の測定値ではありません。Macはポートごとの電力を報告しないため、実際の入力は下の「システム電源入力」グラフに表示されます。";
 "No power data for this port right now." = "現在このポートの電力データはありません。";
+"Waiting for power telemetry from macOS..." = "macOSから電力データの受信を待機中...";
 "Upgrade to WhatCable Pro" = "WhatCable Proにアップグレード";
 "not reported in this state" = "この状態では報告されません";
 
@@ -322,7 +326,7 @@
 "See what your USB-C cables can do at a glance." = "USB-Cケーブルの性能をひと目で確認。";
 
 /* Negotiation diagnostics + Pro UX (PR #55). English; non-English to be refined by the community translation flow. */
-"The cable's own e-marker under-reports its speed; the Thunderbolt controller confirms it is faster." = "The cable's own e-marker under-reports its speed; the Thunderbolt controller confirms it is faster.";
+"The cable's e-marker and the Thunderbolt controller disagree on its speed; the controller's reading is treated as authoritative." = "The cable's e-marker and the Thunderbolt controller disagree on its speed; the controller's reading is treated as authoritative.";
 "Running at %@" = "Running at %@";
 "There's no cable e-marker or controller data, and no port or device capability to compare against, so we can't tell whether the cable is the limit." = "There's no cable e-marker or controller data, and no port or device capability to compare against, so we can't tell whether the cable is the limit.";
 "This cable has no e-marker and no controller data, so we can't tell whether it is the limit." = "This cable has no e-marker and no controller data, so we can't tell whether it is the limit.";
@@ -354,4 +358,57 @@
 "Cable signals disagree" = "Cable signals disagree";
 "an unknown speed" = "an unknown speed";
 "a higher speed" = "a higher speed";
-"The cable's own e-marker reports %@, but the Thunderbolt controller negotiated %@. This is common on active Thunderbolt cables that declare themselves passive. The controller's reading is the one used above." = "The cable's own e-marker reports %@, but the Thunderbolt controller negotiated %@. This is common on active Thunderbolt cables that declare themselves passive. The controller's reading is the one used above.";
+"The cable's own e-marker reports %@, but the Thunderbolt controller sees %@. This can happen with active Thunderbolt cables that under-report (declaring themselves passive at a low speed) or with suspect cables whose e-markers over-state their capability. The controller's reading is the one used above." = "The cable's own e-marker reports %@, but the Thunderbolt controller sees %@. This can happen with active Thunderbolt cables that under-report (declaring themselves passive at a low speed) or with suspect cables whose e-markers over-state their capability. The controller's reading is the one used above.";
+/* Pro overview screen + footer pill (Pro funnel). Parity placeholders in English; refine in the community translation flow. */
+"Cable Diagnostics" = "Cable Diagnostics";
+"Deep per-port pin maps, plug orientation, and protocol detail." = "Deep per-port pin maps, plug orientation, and protocol detail.";
+"Licence Key" = "Licence Key";
+"Live MagSafe pin layout for charging and diagnostics." = "Live MagSafe pin layout for charging and diagnostics.";
+"Live multi-port power graphs and event history." = "Live multi-port power graphs and event history.";
+"MagSafe pin diagrams" = "MagSafe pin diagrams";
+"Manage Licence…" = "Manage Licence…";
+"See exactly what each link can do, and where the bottleneck is." = "See exactly what each link can do, and where the bottleneck is.";
+"Unlock deep diagnostics, live power graphs, and per-port history. One-off licence, no subscription." = "Unlock deep diagnostics, live power graphs, and per-port history. One-off licence, no subscription.";
+"Cable says %@, link reads %@" = "Cable says %@, link reads %@";
+"The cable's e-marker reports %@, but the active link is reading %@. One of those readings is wrong, and without a Thunderbolt controller cross-check we can't tell which. Trying a known-good cable will identify the culprit." = "The cable's e-marker reports %@, but the active link is reading %@. One of those readings is wrong, and without a Thunderbolt controller cross-check we can't tell which. Trying a known-good cable will identify the culprit.";
+
+/* Display dimension. English; non-English to be refined by the community translation flow. */
+"A display is connected but its capabilities aren't readable, so there's nothing to compare the link against." = "A display is connected but its capabilities aren't readable, so there's nothing to compare the link against.";
+"The link is carrying about %@ (%lld of %lld lanes)." = "The link is carrying about %@ (%lld of %lld lanes).";
+"display" = "display";
+"Your %@ is connected, but the link rate isn't readable, so there's nothing to compare its capability against." = "Your %@ is connected, but the link rate isn't readable, so there's nothing to compare its capability against.";
+"Display running at full quality" = "Display running at full quality";
+"Your %@ is connected and the link has the bandwidth for its top mode. Nothing is holding the picture back." = "Your %@ is connected and the link has the bandwidth for its top mode. Nothing is holding the picture back.";
+"%lld of %lld lanes at %@" = "%lld of %lld lanes at %@";
+"%lld of %lld lanes" = "%lld of %lld lanes";
+"up to %lldHz" = "up to %lldHz";
+"a higher mode than the link is carrying" = "a higher mode than the link is carrying";
+"This estimate assumes standard colour; a display using compression (DSC) may reach more." = "This estimate assumes standard colour; a display using compression (DSC) may reach more.";
+"Video is going through a %@ adapter" = "Video is going through a %@ adapter";
+"Your %@ is reached through a USB-C to %@ adapter, and the link isn't currently carrying the monitor's top mode (%@, about %@); it's carrying about %@ (%@). With an adapter in the chain, the adapter's own limit may be the cap rather than the cable. Trying the monitor over native DisplayPort, or a higher-spec adapter, would tell you which." = "Your %@ is reached through a USB-C to %@ adapter, and the link isn't currently carrying the monitor's top mode (%@, about %@); it's carrying about %@ (%@). With an adapter in the chain, the adapter's own limit may be the cap rather than the cable. Trying the monitor over native DisplayPort, or a higher-spec adapter, would tell you which.";
+"Monitor can do more than the link is carrying" = "Monitor can do more than the link is carrying";
+"Your %@ can run %@, which needs about %@, but the link is currently carrying about %@ (%@). If you've selected the higher mode and aren't getting it, the cable or adapter is the likely limit; if you haven't tried it, selecting it may retrain the link to a higher rate." = "Your %@ can run %@, which needs about %@, but the link is currently carrying about %@ (%@). If you've selected the higher mode and aren't getting it, the cable or adapter is the likely limit; if you haven't tried it, selecting it may retrain the link to a higher rate.";
+"Display Diagnostics" = "Display Diagnostics";
+"What your monitor can do, and what the link is carrying." = "What your monitor can do, and what the link is carrying.";
+"No Displays" = "No Displays";
+"Connect a monitor over USB-C or Thunderbolt to see what the link is delivering." = "Connect a monitor over USB-C or Thunderbolt to see what the link is delivering.";
+"%@ port %lld" = "%@ port %lld";
+"Display" = "Display";
+"%lld × %lld" = "%lld × %lld";
+"native %lldHz" = "native %lldHz";
+"Top mode needs" = "Top mode needs";
+"Link carries" = "Link carries";
+"Rate" = "Rate";
+"See whether the link is carrying your monitor's full resolution and refresh." = "See whether the link is carrying your monitor's full resolution and refresh.";
+"Display links have their own screen: Display Diagnostics." = "Display links have their own screen: Display Diagnostics.";
+
+/* Display dimension: cable attribution. English; community-refined. */
+"Your %@ can run %@, which needs about %@, but the link is currently carrying about %@ (%@). The video is tunneled over Thunderbolt or USB4, so the cable carries far more than the display needs: this is unlikely to be the cable. It's most likely the resolution or refresh rate selected in Display settings, or this Mac's limit for this display." = "Your %@ can run %@, which needs about %@, but the link is currently carrying about %@ (%@). The video is tunneled over Thunderbolt or USB4, so the cable carries far more than the display needs: this is unlikely to be the cable. It's most likely the resolution or refresh rate selected in Display settings, or this Mac's limit for this display.";
+"Your %@ can run %@, which needs about %@, but the link is currently carrying about %@ (%@). The cable is already carrying every DisplayPort lane this Mac provides, so this is unlikely to be the cable. It's most likely the resolution or refresh rate selected in Display settings." = "Your %@ can run %@, which needs about %@, but the link is currently carrying about %@ (%@). The cable is already carrying every DisplayPort lane this Mac provides, so this is unlikely to be the cable. It's most likely the resolution or refresh rate selected in Display settings.";
+
+/* Display dimension: branch device. English; community-refined. */
+"Your %@ is reached through a USB-C to %@ adapter that reports as %@, currently carrying about %@ (%@), short of the monitor's top mode (%@, about %@). With an adapter in the chain, the adapter's own limit may be the cap rather than the cable. A native DisplayPort connection, or a higher-spec adapter, would tell you which." = "Your %@ is reached through a USB-C to %@ adapter that reports as %@, currently carrying about %@ (%@), short of the monitor's top mode (%@, about %@). With an adapter in the chain, the adapter's own limit may be the cap rather than the cable. A native DisplayPort connection, or a higher-spec adapter, would tell you which.";
+
+/* Billboard device (display dimension). English; community-refined. */
+"Billboard device present" = "Billboard device present";
+"A Billboard device is present on this port. That usually appears when an Alt Mode like DisplayPort was set up but didn't fully come up. Your display is below its best mode, so a re-plug, a different cable, or a different adapter may bring it up. Some docks show a Billboard device normally, so this isn't always a fault." = "A Billboard device is present on this port. That usually appears when an Alt Mode like DisplayPort was set up but didn't fully come up. Your display is below its best mode, so a re-plug, a different cable, or a different adapter may bring it up. Some docks show a Billboard device normally, so this isn't always a fault.";

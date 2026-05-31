@@ -27,6 +27,11 @@ public final class PluginRegistry {
         headerButtonBuilders.append(headerButton)
     }
 
+    public private(set) var footerButtonBuilders: [() -> AnyView] = []
+    public func register(footerButton: @escaping () -> AnyView) {
+        footerButtonBuilders.append(footerButton)
+    }
+
     public private(set) var portCardTrailingBuilders: [(PortCardContext) -> AnyView?] = []
     public func register(portCardTrailing: @escaping (PortCardContext) -> AnyView?) {
         portCardTrailingBuilders.append(portCardTrailing)
@@ -40,6 +45,16 @@ public final class PluginRegistry {
     public private(set) var cliCommands: [CLICommand] = []
     public func register(cliCommand: CLICommand) {
         cliCommands.append(cliCommand)
+    }
+
+    /// Contributors that append a footer line to one-shot CLI text output.
+    /// Each returns nil when it has nothing to say (e.g. when the user has
+    /// already unlocked Pro). The CLI calls these only for plain text mode,
+    /// not for --json / --watch / --report, where extra lines would break
+    /// scripts or re-render every tick.
+    public private(set) var cliOutputFooterContributors: [() -> String?] = []
+    public func register(cliOutputFooter: @escaping () -> String?) {
+        cliOutputFooterContributors.append(cliOutputFooter)
     }
 
     public private(set) var settingsProSectionBuilders: [() -> AnyView] = []

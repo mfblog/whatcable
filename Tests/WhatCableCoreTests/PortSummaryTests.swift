@@ -475,8 +475,9 @@ struct PortSummaryTests {
 
     // MARK: - DisplayPort lane config
 
-    @Test("DP bullet includes lane count when pin assignment present")
-    func dpBulletIncludesLaneCountWhenPinAssignmentPresent() {
+    @Test("DP bullet shows 4 lanes when USB3 is not active alongside")
+    func dpBulletShowsFourLaneWhenNoUSB3() {
+        // DisplayPort active, no USB3 on the link: all four lanes carry DP.
         let port = USBCPort(
             id: 1, serviceName: "Port-USB-C@1", className: "AppleHPMInterfaceType10",
             portDescription: "Port-USB-C@1", portTypeDescription: "USB-C",
@@ -497,19 +498,24 @@ struct PortSummaryTests {
         #expect(dpBullet!.contains("4 DP lanes"), "Expected 4-lane info, got: \(dpBullet!)")
     }
 
-    @Test("DP bullet shows two lane for assignment D")
-    func dpBulletShowsTwoLaneForAssignmentD() {
+    // Regression for issue #228 (UGreen Revodok): the same
+    // DisplayPortPinAssignment value (1) appears for both a 4-lane link (no
+    // USB3) and a 2-lane link (USB3 active). Lane count must come from whether
+    // USB3 is active, not from the pin assignment integer. This port uses
+    // pin assignment 1 *and* has USB3 active, so it must read as 2 lanes.
+    @Test("DP bullet shows 2 lanes when USB3 is active alongside (ignores pin assignment)")
+    func dpBulletShowsTwoLaneWhenUSB3Active() {
         let port = USBCPort(
             id: 1, serviceName: "Port-USB-C@1", className: "AppleHPMInterfaceType10",
             portDescription: "Port-USB-C@1", portTypeDescription: "USB-C",
             portNumber: 1, connectionActive: true, activeCable: nil, opticalCable: nil,
             usbActive: nil, superSpeedActive: true, usbModeType: nil, usbConnectString: nil,
             transportsSupported: ["CC", "USB2", "USB3", "DisplayPort"],
-            transportsActive: ["USB3", "DisplayPort"],
+            transportsActive: ["CC", "USB3", "USB2", "DisplayPort"],
             transportsProvisioned: [],
             plugOrientation: nil, plugEventCount: nil, connectionCount: nil,
             overcurrentCount: nil, pinConfiguration: [:],
-            displayPortPinAssignment: 2,
+            displayPortPinAssignment: 1,
             powerCurrentLimits: [],
             firmwareVersion: nil, bootFlagsHex: nil, rawProperties: [:]
         )
@@ -517,14 +523,18 @@ struct PortSummaryTests {
         let dpBullet = summary.bullets.first { $0.contains("DisplayPort") }
         #expect(dpBullet != nil)
         #expect(dpBullet!.contains("2 DP lanes"), "Expected 2-lane info, got: \(dpBullet!)")
+        #expect(!dpBullet!.contains("no USB3"), "2-lane link must not claim 'no USB3': \(dpBullet!)")
     }
 
-    @Test("DP bullet falls back when no pin assignment")
-    func dpBulletFallsBackWhenNoPinAssignment() {
+    @Test("DP lane count is determined without relying on a pin assignment")
+    func dpBulletClassifiesWithoutPinAssignment() {
+        // DisplayPort active, no USB3, no pin assignment reported: still
+        // classifiable as 4-lane from the absence of USB3.
         let port = makePort(active: ["DisplayPort"])
         let summary = PortSummary(port: port)
         let dpBullet = summary.bullets.first { $0.contains("DisplayPort") }
-        #expect(dpBullet == "Carrying DisplayPort video")
+        #expect(dpBullet != nil)
+        #expect(dpBullet!.contains("4 DP lanes"), "Expected 4-lane info, got: \(dpBullet!)")
     }
 
     // MARK: - Partner PD revision
@@ -541,7 +551,7 @@ struct PortSummaryTests {
         let summary = PortSummary(port: port, identities: [partner])
         let deviceBullet = summary.bullets.first { $0.contains("Connected device") }
         #expect(deviceBullet != nil)
-        #expect(deviceBullet!.contains("PD 3.1"), "Expected PD revision, got: \(deviceBullet!)")
+        #expect(deviceBullet!.contains("PD 3.0"), "Expected PD revision, got: \(deviceBullet!)")
     }
 
     @Test("Partner bullet omits PD revision when zero")
@@ -733,6 +743,35 @@ struct PortSummaryTests {
         )
     }
 
+    @Test("USB2-only link ignores superSpeedActive and lingering USB3 transport")
+    func usb2OnlyLinkIgnoresSuperSpeedFlagAndLingeringTransport() {
+        // Issue #187: a USB-C to Micro-USB cable (physically USB 2.0 only)
+        // is reported as USB 3.2 Gen 2 (10 Gbps). The HPM port controller
+        // can leave IOAccessoryUSBSuperSpeedActive=1 set and keep a
+        // lingering IOPortTransportStateUSB3 service registered even when
+        // TransportsActive carries only USB2. The transport label must
+        // never override the authoritative TransportsActive list.
+        let port = makePort(
+            connected: true,
+            active: ["CC", "USB2"],
+            supported: ["CC", "USB2", "USB3", "CIO", "DisplayPort"],
+            superSpeed: true
+        )
+        let transport = USB3Transport(
+            id: 187, portKey: "2/1", signaling: 2,
+            signalingDescription: "Gen 2", dataRole: "host"
+        )
+        let summary = PortSummary(port: port, usb3Transports: [transport])
+        #expect(
+            summary.bullets.contains(where: { $0.contains("USB 3.2") || $0.contains("SuperSpeed") }) == false,
+            "USB3 bullet must not appear for a USB2-only link, got: \(summary.bullets)"
+        )
+        #expect(
+            summary.bullets.contains(where: { $0.contains("USB 2.0") }),
+            "USB 2.0 bullet should appear, got: \(summary.bullets)"
+        )
+    }
+
     @Test("USB3 transport wrong port key ignored")
     func usb3TransportWrongPortKeyIgnored() {
         // Transport data for a different port should not affect this port.
@@ -896,6 +935,48 @@ struct PortSummaryTests {
         )
     }
 
+    /// Issue #190 follow-up: iPhone 17 Pro on a Mac Studio front USB-C port
+    /// shows "5 Gbps or faster" instead of "USB 3.2 Gen 2 (10 Gbps)" even
+    /// though the device section correctly reports 10 Gbps. Apple Silicon
+    /// front USB-C ports route through an internal virtual root that
+    /// inflates the locationID by an extra nibble, so directly-attached
+    /// devices fail `isRootDevice`. With no HPM transport reading
+    /// (SuperSpeedSignaling==0 on these ports) the bullet falls through to
+    /// the generic "SuperSpeed USB" string. The port-matched fallback,
+    /// driven by `controllerPortName`, recovers the real speed.
+    @Test("Issue #190: virtual-root port reports device speed via controllerPortName")
+    func issue190VirtualRootPortReportsViaControllerPortName() {
+        let port = makePort(connected: true, active: ["USB3"], supported: ["CC", "USB3"])
+        // Transport service exists but signaling is 0 (USB3Transport.speedLabel
+        // returns nil for this case after commit 90fce0b).
+        let transport = USB3Transport(
+            id: 210, portKey: "2/1", signaling: 0,
+            signalingDescription: "None", dataRole: "host"
+        )
+        // Directly-attached device, but locationID has two non-zero nibbles
+        // because of Apple's internal virtual root in front of the port.
+        let device = USBDevice(
+            id: 410, locationID: 0x0021_0000,
+            vendorID: 0x05AC, productID: 0x12A8,
+            vendorName: "Apple", productName: "iPhone",
+            serialNumber: nil, usbVersion: "3.2",
+            speedRaw: 4, busPowerMA: 500, currentMA: 500,
+            controllerPortName: "Port-USB-C@1",
+            rawProperties: [:]
+        )
+        let summary = PortSummary(
+            port: port, devices: [device], usb3Transports: [transport]
+        )
+        #expect(
+            summary.bullets.contains(where: { $0.contains("USB 3.2 Gen 2 (10 Gbps)") }),
+            "Should report device speed via controllerPortName fallback, got: \(summary.bullets)"
+        )
+        #expect(
+            summary.bullets.contains(where: { $0.contains("5 Gbps or faster") }) == false,
+            "Generic fallback should not fire when device speed is available, got: \(summary.bullets)"
+        )
+    }
+
     // MARK: - Real cable reproductions (from issue reports)
 
     /// Issue #131: Apple Thunderbolt 5 data cable (A3189) on M4 MBA.
@@ -911,12 +992,14 @@ struct PortSummaryTests {
             vdos: vdos, specRevision: 0
         )
 
-        // Verify the cable VDO decodes to Gen 4 / 80 Gbps / 250W passive.
+        // Verify the cable VDO decodes to Gen 4 / 80 Gbps / 50V-rated passive.
         let cv = cable.cableVDO!
         #expect(cv.speed == .usb4Gen4)
         #expect(cv.current == .fiveAmp)
         #expect(cv.maxVolts == 50)
-        #expect(cv.maxWatts == 250)
+        // Deliverable power is clamped to USB-PD's 48V ceiling: 48 * 5 = 240W,
+        // not the 50 * 5 = 250W the raw rating field would imply.
+        #expect(cv.maxWatts == 240)
         #expect(cv.cableType == .passive)
         #expect(cv.decodeWarnings.isEmpty)
 
@@ -939,8 +1022,8 @@ struct PortSummaryTests {
             "Cable maker bullet should show Apple, got: \(summary.bullets)"
         )
         #expect(
-            summary.bullets.contains(where: { $0.contains("250W") }),
-            "Cable power bullet should show 250W, got: \(summary.bullets)"
+            summary.bullets.contains(where: { $0.contains("240W") && $0.contains("USB-PD caps at 48V") }),
+            "Cable power bullet should show the 240W deliverable with the 48V cap note, got: \(summary.bullets)"
         )
     }
 

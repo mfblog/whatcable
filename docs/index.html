@@ -12,12 +12,13 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.whatcable.uk/">
 <meta property="og:title" content="WhatCable: Know what your USB-C cable can really do">
-<meta property="og:description" content="Why is my MacBook charging slowly? WhatCable shows USB-C cable speed, charging power, and e-marker data in plain English. Free Mac app for Apple Silicon.">
+<meta property="og:description" content="Why is my MacBook charging slowly? WhatCable shows USB-C cable speed, charging power, and e-marker data in plain English. Featured in Lifehacker, Boing Boing, and MakeUseOf.">
 <meta property="og:image" content="https://www.whatcable.uk/screenshot.webp">
+
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="WhatCable: Know what your USB-C cable can really do">
-<meta name="twitter:description" content="Why is my MacBook charging slowly? WhatCable shows USB-C cable speed, charging power, and e-marker data in plain English. Free Mac app for Apple Silicon.">
+<meta name="twitter:description" content="Why is my MacBook charging slowly? WhatCable shows USB-C cable speed, charging power, and e-marker data in plain English. Featured in Lifehacker, Boing Boing, and MakeUseOf.">
 <meta name="twitter:image" content="https://www.whatcable.uk/screenshot.webp">
 
 
@@ -155,11 +156,13 @@
     font-size: 20px;
     font-weight: 700;
     margin: 32px 0 12px;
+    scroll-margin-top: 80px;
   }
   h3 {
     font-size: 17px;
     font-weight: 700;
     margin: 24px 0 10px;
+    scroll-margin-top: 80px;
   }
   p {
     margin: 0 0 14px;
@@ -184,6 +187,52 @@
     border: none;
     border-top: 1px solid var(--line);
     margin: 32px 0;
+  }
+
+  /* Scrollable wrapper injected by the Eleventy wrapTables transform. */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 0 20px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .table-wrap table { margin: 0; border: none; border-radius: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    margin: 0 0 20px;
+  }
+  thead tr {
+    background: var(--line-soft);
+    border-bottom: 2px solid var(--line);
+  }
+  th {
+    text-align: left;
+    padding: 9px 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-soft);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--line-soft); }
+
+  /* Images in post body: markdown renders bare <img> not <figure>, so scope
+     the size constraint and chrome here rather than relying on figure img. */
+  .post-body img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    margin: 20px auto;
   }
 
   figure { margin: 20px 0; }
@@ -222,6 +271,51 @@
     vertical-align: middle;
     margin-left: 4px;
   }
+
+  .faq-section {
+    margin-top: 40px;
+  }
+  .faq-section h2 {
+    margin-bottom: 16px;
+  }
+  .faq-item {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .faq-item > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 14px 18px;
+    font-weight: 600;
+    color: var(--ink);
+    position: relative;
+    padding-right: 44px;
+  }
+  .faq-item > summary::-webkit-details-marker { display: none; }
+  .faq-item > summary::after {
+    content: "+";
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: var(--muted);
+    transition: transform 0.15s ease;
+  }
+  .faq-item[open] > summary::after {
+    content: "−";
+  }
+  .faq-item > summary:hover {
+    background: var(--line-soft);
+  }
+  .faq-answer {
+    padding: 0 18px 14px;
+    color: var(--ink-soft);
+  }
+  .faq-answer > :last-child { margin-bottom: 0; }
 
   footer {
     padding: 32px 0;
@@ -266,10 +360,22 @@
   ],
   "description": "Why is my MacBook charging slowly? WhatCable shows USB-C cable speed, charging power, and e-marker data in plain English. Free Mac app for Apple Silicon.",
   "url": "https://www.whatcable.uk",
-  "downloadUrl": "https://github.com/darrylmorley/whatcable/releases/latest",
-  "softwareVersion": "0.12.1",
+  "downloadUrl": "https://github.com/darrylmorley/whatcable/releases/latest/download/WhatCable.zip",
+  "softwareVersion": "0.15.1",
   "author": { "@type": "Person", "name": "Darryl Morley", "url": "https://github.com/darrylmorley" },
-  "license": "https://opensource.org/licenses/MIT"
+  "license": "https://opensource.org/licenses/MIT",
+  "keywords": [
+    "USB-C",
+    "USB4",
+    "Thunderbolt",
+    "Thunderbolt 5",
+    "e-marker",
+    "USB Power Delivery",
+    "USB-C cable database",
+    "macOS",
+    "Apple Silicon",
+    "menu bar app"
+  ]
 }
 </script>
 <style>
@@ -378,6 +484,12 @@
   }
 
   .home .press { padding: 20px 0 12px; border-bottom: 1px solid var(--line-soft); }
+  .home .product-hunt {
+    display: flex;
+    justify-content: center;
+    margin: 32px 0 0;
+  }
+  .home .product-hunt img { height: 54px; width: auto; }
   .home .press-label {
     text-align: center;
     margin: 0 0 22px;
@@ -670,8 +782,7 @@
 
   .home .faq-section { border-top: 1px solid var(--line); }
   .home .faq-list { max-width: 720px; }
-  .home .faq-item { padding: 24px 0; border-bottom: 1px solid var(--line); }
-  .home .faq-item:first-child { border-top: 1px solid var(--line); }
+  .home .faq-item { padding: 22px 26px; }
   .home .faq-item h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
   .home .faq-item p { color: var(--ink-soft); font-size: 15px; line-height: 1.6; }
 
@@ -709,10 +820,12 @@
   .home .install-section .section-head p { color: rgba(255, 255, 255, 0.7); }
   .home .install-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 48px;
-    align-items: center;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 32px;
+    align-items: stretch;
   }
+  .home .install-card { display: flex; flex-direction: column; }
+  .home .install-card .install-card-body { flex: 1; }
   .home .install-card {
     padding: 28px;
     border-radius: 12px;
@@ -830,7 +943,7 @@
         charges slow or refuses to drive your display.
       </p>
       <div class="actions">
-        <a class="button primary" href="https://github.com/darrylmorley/whatcable/releases/latest">
+        <a class="button primary" href="https://github.com/darrylmorley/whatcable/releases/latest/download/WhatCable.zip" download>
           Download for macOS
           <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
@@ -846,7 +959,7 @@
       </div>
     </div>
     <div class="hero-shot">
-      <img src="/screenshot.webp?v=0.12.1" alt="WhatCable menu bar popover showing USB-C port diagnostics, with the Plugged in / battery full state, charger PDO list, and a cable identified from the bundled cable database">
+      <img src="/screenshot.webp?v=0.15.1" alt="WhatCable menu bar popover showing USB-C port diagnostics: a monitor connected through a USB-C to HDMI adapter, with WhatCable explaining the adapter is holding it below the display's top mode, and a 100W charger with the battery full">
     </div>
   </div>
 </header>
@@ -859,6 +972,11 @@
       <img src="/press/makeuseof.webp" alt="MakeUseOf">
       <img src="/press/adafruit.png" alt="Adafruit">
       <img src="/press/boingboing.png" alt="Boing Boing">
+    </div>
+    <div class="product-hunt">
+      <a href="https://www.producthunt.com/products/whatcable?embed=true&amp;utm_source=badge-top-post-badge&amp;utm_medium=badge&amp;utm_campaign=badge-whatcable" target="_blank" rel="noopener noreferrer">
+        <img alt="WhatCable - Know what your USB-C cable can really do | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1153432&amp;theme=light&amp;period=daily&amp;t=1779720313376">
+      </a>
     </div>
   </div>
 </section>
@@ -888,12 +1006,12 @@
     <div class="feature-grid">
       <article class="feature"><div class="icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><h3>Charging bottlenecks</h3><p>See whether the cable, charger, or Mac is limiting the current charge rate, with the negotiated power profile highlighted.</p></article>
       <article class="feature"><div class="icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 13l4-4M8 21h8"/></svg></div><h3>Data-speed bottlenecks</h3><p>A plain-English verdict on what is limiting the link: the Mac port, the cable, or the device, so you know whether a faster cable would actually help.</p></article>
+      <article class="feature"><div class="icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><h3>Display bottlenecks</h3><p>When a monitor is connected, see whether the link is carrying its full resolution and refresh, or falling short, and whether an adapter, the cable, or the selected mode is the limit.</p></article>
       <article class="feature"><div class="icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 7V5M17 7V5M7 17v2M17 17v2"/></svg></div><h3>Cable e-marker data</h3><p>Decode cable speed, current rating, vendor identity, and USB PD capability flags from marked USB-C cables.</p></article>
       <article class="feature"><div class="icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg></div><h3>Active transports</h3><p>Identify USB 2, USB 3, USB4, Thunderbolt, and DisplayPort paths under the physical port where they are connected.</p></article>
       <article class="feature"><div class="icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><h3>Engineer mode</h3><p>Option-click or enable raw details to reveal the underlying IOKit properties when you need the registry-level facts.</p></article>
       <article class="feature"><div class="icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01"/></svg></div><h3>Device identity</h3><p>Match storage, hubs, docks, and peripherals back to the port they are using, including the negotiated USB speed.</p></article>
       <article class="feature"><div class="icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><h3>Built for macOS</h3><p>A focused menu bar app on Apple Silicon Macs. No helper daemon, no private API, no background uploads.</p></article>
-      <div class="feature" aria-hidden="true"></div>
       <div class="feature" aria-hidden="true"></div>
     </div>
   </div>
@@ -988,7 +1106,7 @@
       <p>Every cable reported through the app gets added to a public, searchable database. Check if your cable has been seen before, or browse what others are using.</p>
     </div>
     <div class="cables-grid">
-      <div class="cable-card"><span class="cable-speed usb4">USB4 80 Gbps</span><strong>CalDigit TB5 cable</strong><span class="cable-meta">250W, passive</span></div>
+      <div class="cable-card"><span class="cable-speed usb4">USB4 80 Gbps</span><strong>CalDigit TB5 cable</strong><span class="cable-meta">240W, passive</span></div>
       <div class="cable-card"><span class="cable-speed usb4">USB4 40 Gbps</span><strong>UGREEN Revodok Max 213</strong><span class="cable-meta">100W, passive</span></div>
       <div class="cable-card"><span class="cable-speed usb2">USB 2.0</span><strong>Anker 333 nylon</strong><span class="cable-meta">100W, passive</span></div>
       <div class="cable-card"><span class="cable-speed usb3">USB 3.2 Gen 2</span><strong>Monoprice Essentials</strong><span class="cable-meta">100W, passive</span></div>
@@ -1023,7 +1141,7 @@
       <div class="pro-teaser-copy">
         <span class="section-tag">Pro</span>
         <h2>Need more? Pro goes deeper.</h2>
-        <p>The free app covers cable identity, charging info, device detection, and a plain-English verdict on what is limiting each link. Pro shows the full breakdown: <strong>Negotiation Diagnostics</strong> with Mac port, cable, and device side by side and the weak link called out, plus live power metering, PD contract inspection, port health counters, DP Alt Mode details, and more. All from IOKit, no extra software needed.</p>
+        <p>The free app covers cable identity, charging info, device detection, and a plain-English verdict on what is limiting each link. Pro shows the full breakdown: <strong>Negotiation Diagnostics</strong> with Mac port, cable, and device side by side and the weak link called out, <strong>Display Diagnostics</strong> showing whether the link is carrying your monitor's full resolution and refresh, plus live power metering, PD contract inspection, port health counters, and more. All from IOKit, no extra software needed.</p>
         <p class="pro-teaser-price">£4.99 one-time. Works on up to 2 Macs.</p>
         <div class="pro-teaser-actions">
           <a class="button primary" href="/pro">
@@ -1034,6 +1152,7 @@
       </div>
       <div class="pro-teaser-highlights">
         <div class="pro-highlight"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="4" height="9"/><rect x="10" y="7" width="4" height="13"/><rect x="17" y="3" width="4" height="17"/></svg><div><strong>Negotiation Diagnostics</strong><span>Mac port, cable, and device support side by side, with the weak link highlighted.</span></div></div>
+        <div class="pro-highlight"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><div><strong>Display Diagnostics</strong><span>Whether the link is carrying your monitor's full resolution and refresh, or falling short.</span></div></div>
         <div class="pro-highlight"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><div><strong>Live power metering</strong><span>Watts, amps, and voltage per port, updating every 2 seconds.</span></div></div>
         <div class="pro-highlight"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div><strong>Port health counters</strong><span>Lifetime resets, shorts, errors, and FET failures per port.</span></div></div>
         <div class="pro-highlight"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><div><strong>DP Alt Mode and EDID</strong><span>Lane count, link rate, and full monitor identity over USB-C.</span></div></div>
@@ -1079,28 +1198,47 @@
   <div class="wrap-wide">
     <div class="section-head">
       <span class="section-tag">Install</span>
-      <h2>Get the menu bar app and CLI in one step.</h2>
-      <p>WhatCable is signed, notarised, and ships as a universal app. Requires macOS 14 or later on Apple Silicon.</p>
+      <h2>Pick the install that fits how you work.</h2>
+      <p>Menu bar app, command-line tool, or both. Signed, notarised, and universal. Requires macOS 14 or later on Apple Silicon.</p>
     </div>
     <div class="install-grid">
       <div class="install-card">
-        <div class="install-card-label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-          Recommended: Homebrew
-        </div>
+        <div class="install-card-body">
+          <div class="install-card-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            Recommended: Homebrew
+          </div>
+          <p style="color: rgba(255,255,255,0.7); font-size: 14.5px; margin-bottom: 14px;">Menu bar app plus the <code style="background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; font-size: 13px;">whatcable</code> CLI on your PATH.</p>
 <pre>brew tap darrylmorley/whatcable
 brew install --cask whatcable</pre>
+        </div>
         <button type="button" class="button primary" data-copy="brew tap darrylmorley/whatcable &amp;&amp; brew install --cask whatcable" onclick="copyCommand(this)">
           Copy command
         </button>
       </div>
       <div class="install-card">
-        <div class="install-card-label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-          Direct download
+        <div class="install-card-body">
+          <div class="install-card-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
+            CLI only
+          </div>
+          <p style="color: rgba(255,255,255,0.7); font-size: 14.5px; margin-bottom: 14px;">Just the <code style="background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; font-size: 13px;">whatcable</code> command, no menu bar app. Same signed binary, useful for terminal-only setups and scripts.</p>
+<pre>brew tap darrylmorley/whatcable
+brew install whatcable-cli</pre>
         </div>
-        <p style="color: rgba(255,255,255,0.7); font-size: 14.5px; margin-bottom: 18px;">Grab the latest <code style="background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; font-size: 13px;">.zip</code> from GitHub Releases. Drag <strong style="color: #fff;">WhatCable.app</strong> into Applications.</p>
-        <a class="button primary" href="https://github.com/darrylmorley/whatcable/releases/latest">Get the latest release</a>
+        <button type="button" class="button primary" data-copy="brew tap darrylmorley/whatcable &amp;&amp; brew install whatcable-cli" onclick="copyCommand(this)">
+          Copy command
+        </button>
+      </div>
+      <div class="install-card">
+        <div class="install-card-body">
+          <div class="install-card-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Direct download
+          </div>
+          <p style="color: rgba(255,255,255,0.7); font-size: 14.5px; margin-bottom: 18px;">Grab the latest <code style="background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; font-size: 13px;">.zip</code> from GitHub Releases. The release page also has a CLI-only zip. Drag <strong style="color: #fff;">WhatCable.app</strong> into Applications.</p>
+        </div>
+        <a class="button primary" href="https://github.com/darrylmorley/whatcable/releases/latest/download/WhatCable.zip" download>Get the latest release</a>
       </div>
     </div>
   </div>

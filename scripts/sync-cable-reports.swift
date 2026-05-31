@@ -67,13 +67,19 @@ func runGh() -> [[String: Any]] {
         fputs("error: could not run gh: \(error)\n", Darwin.stderr)
         exit(3)
     }
+    // Drain both pipes BEFORE waitUntilExit. gh's JSON output for the full
+    // closed-issue list now exceeds the OS pipe buffer (~64KB). If we wait
+    // for exit before reading, gh blocks trying to write into a full pipe
+    // and never exits, deadlocking the script. readDataToEndOfFile drains
+    // the pipe as gh fills it, so gh can finish and close the descriptor.
+    let data = stdout.fileHandleForReading.readDataToEndOfFile()
+    let errData = stderr.fileHandleForReading.readDataToEndOfFile()
     proc.waitUntilExit()
     if proc.terminationStatus != 0 {
-        let err = String(data: stderr.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        let err = String(data: errData, encoding: .utf8) ?? ""
         fputs("error: gh exited \(proc.terminationStatus): \(err)\n", Darwin.stderr)
         exit(4)
     }
-    let data = stdout.fileHandleForReading.readDataToEndOfFile()
     guard let json = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
         fputs("error: could not parse gh JSON output\n", Darwin.stderr)
         exit(5)
@@ -188,6 +194,15 @@ func parse(body: String, issueNumber: Int) -> Report? {
 /// Reformat "5 A at up to 20V (~100W)" as "5 A / 20 V (100 W)" to match
 /// the existing table convention. Falls back to the raw string if it
 /// doesn't match.
+///
+/// The wattage is recomputed from amps and volts rather than copied from
+/// the issue body, with the voltage clamped to 48 V first. USB-PD never
+/// delivers above 48 V (the fixed EPR power levels top out at 48 V and EPR
+/// adjustable voltage caps there too), so a 50 V e-marker rating is
+/// insulation headroom, not a delivery voltage. Older app versions filed
+/// reports that multiplied 50 V x 5 A into 250 W, a figure no cable can
+/// carry; clamping here corrects those at the source so a re-sync can't
+/// reintroduce them. Mirrors the clamp in PDVDO.decodeCableVDO.
 func humanisePower(_ raw: String) -> String {
     let re = try! NSRegularExpression(
         pattern: "(\\d+(?:\\.\\d+)?)\\s*A\\s+at\\s+up\\s+to\\s+(\\d+(?:\\.\\d+)?)\\s*V\\s*\\(~?(\\d+(?:\\.\\d+)?)\\s*W\\)",
@@ -197,11 +212,15 @@ func humanisePower(_ raw: String) -> String {
     guard let m = re.firstMatch(in: raw, range: range), m.numberOfRanges >= 4,
           let amps = Range(m.range(at: 1), in: raw),
           let volts = Range(m.range(at: 2), in: raw),
-          let watts = Range(m.range(at: 3), in: raw)
+          Range(m.range(at: 3), in: raw) != nil,
+          let ampsVal = Double(raw[amps]),
+          let voltsVal = Double(raw[volts])
     else {
         return raw
     }
-    return "\(raw[amps]) A / \(raw[volts]) V (\(raw[watts]) W)"
+    let deliverableVolts = min(voltsVal, 48)
+    let watts = Int((deliverableVolts * ampsVal).rounded())
+    return "\(raw[amps]) A / \(raw[volts]) V (\(watts) W)"
 }
 
 // MARK: - Existing-context extraction

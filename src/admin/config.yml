@@ -1,12 +1,5 @@
 # Decap CMS configuration for the WhatCable blog.
-#
-# Auth: a fine-grained GitHub PAT scoped to darrylmorley/whatcable-app is
-# stashed in localStorage by the shim in index.html. Decap's GitHub backend
-# reads it from there and uses it for all commits / PRs.
-#
-# Drafts use editorial_workflow: Decap creates a branch like
-# `cms/posts/<slug>` and opens a draft PR. Drafts stay on the private repo
-# until merged to main (mirror only fires on main pushes).
+# Auth happens client-side via the shim in index.html.
 
 backend:
   name: github
@@ -46,6 +39,14 @@ collections:
     fields:
       - { label: "Title", name: "title", widget: "string" }
       - { label: "Slug", name: "slug", widget: "string", hint: "Lowercase, hyphen-separated. Used in the URL and filename." }
+      - label: "Publish date"
+        name: "date"
+        widget: "datetime"
+        default: "{{now}}"
+        date_format: "YYYY-MM-DD"
+        time_format: false
+        format: "YYYY-MM-DD"
+        hint: "Date the post goes live. Used in the URL and shown on the post page."
       - { label: "Summary", name: "summary", widget: "string", hint: "One sentence shown in post lists and the RSS feed." }
       - label: "Category"
         name: "category"
@@ -64,3 +65,13 @@ collections:
         default: []
         hint: "Lowercase, one per line."
       - { label: "Body", name: "body", widget: "markdown" }
+      - label: "FAQs"
+        name: "faqs"
+        widget: "list"
+        required: false
+        collapsed: true
+        summary: "{{fields.q}}"
+        hint: "Optional Q&A pairs. Shown as a section below the post and exposed as FAQPage JSON-LD schema for search engines and AI assistants."
+        fields:
+          - { label: "Question", name: "q", widget: "string" }
+          - { label: "Answer", name: "a", widget: "markdown" }

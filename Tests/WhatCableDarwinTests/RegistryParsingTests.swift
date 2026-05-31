@@ -54,7 +54,7 @@ struct RegistryParsingTests {
             "ParentPortType": NSNumber(value: 2),
             "ParentPortNumber": NSNumber(value: 1)
         ]
-        let builtInParent = PowerSourceWatcher.parentPortIdentity(from: builtIn)
+        let builtInParent = PowerSourceWatcher.parentPortIdentity(read: { builtIn[$0] })
         #expect(builtInParent.type == 0x11)
         #expect(builtInParent.number == 2)
 
@@ -62,7 +62,7 @@ struct RegistryParsingTests {
             "ParentPortType": NSNumber(value: 0x11),
             "Priority": NSNumber(value: 0x0201)
         ]
-        let priorityParent = PowerSourceWatcher.parentPortIdentity(from: priority)
+        let priorityParent = PowerSourceWatcher.parentPortIdentity(read: { priority[$0] })
         #expect(priorityParent.type == 0x11)
         #expect(priorityParent.number == 1)
     }
@@ -79,14 +79,14 @@ struct RegistryParsingTests {
                 "bcdDevice": NSNumber(value: 0x0100)
             ]
         ]
-        let metadata = USBPDSOPWatcher.metadataDictionary(from: dict)
-        let parent = USBPDSOPWatcher.parentPortIdentity(from: dict)
+        let metadata = USBPDSOPWatcher.metadataDictionary(read: { dict[$0] })
+        let parent = USBPDSOPWatcher.parentPortIdentity(read: { dict[$0] })
 
-        #expect(USBPDSOPWatcher.endpoint(from: dict) == .sopPrime)
+        #expect(USBPDSOPWatcher.endpoint(read: { dict[$0] }) == .sopPrime)
         #expect(parent.type == 0x11)
         #expect(parent.number == 1)
-        #expect(USBPDSOPWatcher.vendorID(from: dict, metadata: metadata) == 0x05AC)
-        #expect(USBPDSOPWatcher.productID(from: dict, metadata: metadata) == 0x1234)
+        #expect(USBPDSOPWatcher.vendorID(read: { dict[$0] }, metadata: metadata) == 0x05AC)
+        #expect(USBPDSOPWatcher.productID(read: { dict[$0] }, metadata: metadata) == 0x1234)
         #expect(USBPDSOPWatcher.bcdDevice(from: metadata) == 0x0100)
     }
 
@@ -101,7 +101,7 @@ struct RegistryParsingTests {
             "ParentPortType": NSNumber(value: 2),
             "ParentPortNumber": NSNumber(value: 1)
         ]
-        let builtInParent = USBPDSOPWatcher.parentPortIdentity(from: builtIn)
+        let builtInParent = USBPDSOPWatcher.parentPortIdentity(read: { builtIn[$0] })
         #expect(builtInParent.type == 0x11)
         #expect(builtInParent.number == 2)
 
@@ -109,7 +109,7 @@ struct RegistryParsingTests {
             "ParentPortType": NSNumber(value: 0x11),
             "Priority": NSNumber(value: 0x0201)
         ]
-        let priorityParent = USBPDSOPWatcher.parentPortIdentity(from: priority)
+        let priorityParent = USBPDSOPWatcher.parentPortIdentity(read: { priority[$0] })
         #expect(priorityParent.type == 0x11)
         #expect(priorityParent.number == 1)
     }

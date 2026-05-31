@@ -12,8 +12,8 @@ dist-mas/
 # App Store provisioning profile and any other local-only signing material.
 secrets/
 
-# Local planning / design / scratch docs (kept uncommitted by convention)
-planning/
+# Local scratch docs (kept uncommitted by convention)
+# planning/ is tracked here; .public-exclude keeps it out of the mirror.
 technical-docs/
 CLAUDE.md
 BUILDING.md
@@ -41,3 +41,10 @@ BLOG.md
 # the custom media library, but Decap still requires media_folder set. This
 # folder should never receive real files; ignore it just in case.
 src/blog/uploads/
+AGENTS.md
+
+# Wrangler / Miniflare local state (geolocates the developer)
+.wrangler/
+
+# Internal architectural decision log
+DECISIONS.md

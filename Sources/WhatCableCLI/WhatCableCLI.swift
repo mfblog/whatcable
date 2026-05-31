@@ -25,19 +25,21 @@ struct WhatCableCLI {
             return
         }
 
-        for cmd in PluginRegistry.shared.cliCommands {
-            if cmd.matches(args) {
-                await cmd.run(args)
-                return
+        let wantsDesktop = args.contains("--desktop")
+        let wantsPopover = args.contains("--popover")
+        if wantsDesktop || wantsPopover {
+            if wantsDesktop && wantsPopover {
+                FileHandle.standardError.write(Data("whatcable: --desktop and --popover are mutually exclusive\n".utf8))
+                exit(2)
             }
+            launchApp(menuBarMode: wantsPopover)
+            return
         }
 
-        let showRaw = args.contains("--raw")
-        let asJSON = args.contains("--json")
-        let watch = args.contains("--watch")
-        let report = args.contains("--report")
-
-        var knownFlags: Set<String> = ["--raw", "--json", "--watch", "--report", "--tb-debug", "-h", "--help", "--version"]
+        // Validate unknown flags BEFORE dispatching plugin commands. Otherwise
+        // a typo alongside a plugin flag (e.g. `whatcable --pro --bogus`) would
+        // silently run the plugin instead of complaining about the typo.
+        var knownFlags: Set<String> = ["--raw", "--json", "--watch", "--report", "--tb-debug", "--desktop", "--popover", "-h", "--help", "--version"]
         for cmd in PluginRegistry.shared.cliCommands {
             knownFlags.formUnion(cmd.flagNames)
         }
@@ -46,6 +48,26 @@ struct WhatCableCLI {
             FileHandle.standardError.write(Data(helpText.utf8))
             exit(2)
         }
+
+        // Plugin commands are program-modes, not flags that combine. If the
+        // user typed two at once (e.g. `--activate KEY --silence-pro-hints`)
+        // their intent is ambiguous, so refuse rather than silently picking
+        // the first one in registration order.
+        let matchingCommands = PluginRegistry.shared.cliCommands.filter { $0.matches(args) }
+        if matchingCommands.count > 1 {
+            let names = matchingCommands.flatMap { $0.flagNames }.joined(separator: ", ")
+            FileHandle.standardError.write(Data("whatcable: multiple commands matched (\(names)). Run one at a time.\n".utf8))
+            exit(2)
+        }
+        if let cmd = matchingCommands.first {
+            await cmd.run(args)
+            return
+        }
+
+        let showRaw = args.contains("--raw")
+        let asJSON = args.contains("--json")
+        let watch = args.contains("--watch")
+        let report = args.contains("--report")
 
         let provider = makeDefaultSnapshotProvider()
 
@@ -63,6 +85,18 @@ struct WhatCableCLI {
             }
 
             try printSnapshot(snapshot, asJSON: asJSON, showRaw: showRaw)
+
+            // Plain text one-shot output gets a footer hint from any plugin
+            // that wants one (e.g. the unlicensed-Pro hint). Suppressed for
+            // --json (machine-readable) and not reached for --watch / --report.
+            if !asJSON {
+                for contributor in PluginRegistry.shared.cliOutputFooterContributors {
+                    if let line = contributor() {
+                        print("")
+                        print(line)
+                    }
+                }
+            }
         } catch {
             FileHandle.standardError.write(Data("whatcable: \(error)\n".utf8))
             exit(1)
@@ -80,6 +114,8 @@ struct WhatCableCLI {
           --json         Output as JSON instead of human-readable text
           --raw          Include raw IOKit properties for each port
           --report       Print a cable report (markdown + GitHub URL) and exit
+          --desktop      Open WhatCable as a Dock app with a window
+          --popover      Open WhatCable in the menu bar (popover mode)
           --tb-debug     Dump the IOIOThunderboltSwitch tree (for contributors helping
                          us design the Thunderbolt fabric feature). See issue tracker.
           --version      Print version and exit
@@ -108,7 +144,8 @@ private func printSnapshot(_ snapshot: CableSnapshot, asJSON: Bool, showRaw: Boo
             usb3Transports: snapshot.usb3Transports,
             trmTransports: snapshot.trmTransports,
             cioCapabilities: snapshot.cioCapabilities,
-            usbDevices: snapshot.usbDevices
+            usbDevices: snapshot.usbDevices,
+            displayPorts: snapshot.displayPorts
         )
         print(json)
     } else {
@@ -124,7 +161,8 @@ private func printSnapshot(_ snapshot: CableSnapshot, asJSON: Bool, showRaw: Boo
             federatedIdentities: snapshot.federatedIdentities,
             usb3Transports: snapshot.usb3Transports,
             cioCapabilities: snapshot.cioCapabilities,
-            usbDevices: snapshot.usbDevices
+            usbDevices: snapshot.usbDevices,
+            displayPorts: snapshot.displayPorts
         )
         print(output, terminator: "")
     }
@@ -178,7 +216,8 @@ private func consumeWatchStream(provider: any CableSnapshotProvider, asJSON: Boo
                         usb3Transports: snapshot.usb3Transports,
                         trmTransports: snapshot.trmTransports,
                         cioCapabilities: snapshot.cioCapabilities,
-                        usbDevices: snapshot.usbDevices
+                        usbDevices: snapshot.usbDevices,
+                        displayPorts: snapshot.displayPorts
                     )
                 } catch {
                     FileHandle.standardError.write(Data("whatcable: json encoding failed: \(error)\n".utf8))
@@ -197,7 +236,8 @@ private func consumeWatchStream(provider: any CableSnapshotProvider, asJSON: Boo
                     federatedIdentities: snapshot.federatedIdentities,
                     usb3Transports: snapshot.usb3Transports,
                     cioCapabilities: snapshot.cioCapabilities,
-                    usbDevices: snapshot.usbDevices
+                    usbDevices: snapshot.usbDevices,
+                    displayPorts: snapshot.displayPorts
                 )
             }
 
@@ -227,6 +267,42 @@ private func timestampHeader() -> String {
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
     return "whatcable --watch · \(formatter.string(from: Date()))\n\n"
+}
+
+private func launchApp(menuBarMode: Bool) {
+    let suiteName = "uk.whatcable.whatcable"
+    if let defaults = UserDefaults(suiteName: suiteName) {
+        defaults.set(menuBarMode, forKey: "useMenuBarMode")
+        defaults.set(true, forKey: "hasCompletedOnboarding")
+        defaults.synchronize()
+    }
+
+    // If running from inside the .app bundle (Contents/Helpers/whatcable),
+    // open that specific bundle. Otherwise fall back to Spotlight lookup.
+    let execURL = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath()
+    let candidate = execURL
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+
+    let task = Process()
+    task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+    if candidate.pathExtension == "app" {
+        task.arguments = [candidate.path]
+    } else {
+        task.arguments = ["-a", "WhatCable"]
+    }
+    do {
+        try task.run()
+        task.waitUntilExit()
+        if task.terminationStatus != 0 {
+            FileHandle.standardError.write(Data("whatcable: could not open WhatCable.app\n".utf8))
+            exit(1)
+        }
+    } catch {
+        FileHandle.standardError.write(Data("whatcable: \(error.localizedDescription)\n".utf8))
+        exit(1)
+    }
 }
 
 private func printCableReports(identities: [USBPDSOP], cioCapabilities: [CIOCableCapability]) {

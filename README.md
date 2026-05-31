@@ -8,6 +8,8 @@ A small macOS menu bar app that tells you, in plain English, what each USB-C cab
 
 USB-C hides a lot under one connector. Anything from a USB 2.0 charge-only cable to a 240W / 40 Gbps Thunderbolt 4 cable, all looking identical in your drawer. macOS already exposes the relevant info via IOKit; WhatCable surfaces it as a friendly menu bar popover.
 
+<a href="https://www.producthunt.com/products/whatcable?embed=true&utm_source=badge-top-post-badge&utm_medium=badge&utm_campaign=badge-whatcable" target="_blank" rel="noopener noreferrer"><img alt="WhatCable - Know what your USB-C cable can really do | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1153432&theme=light&period=daily&t=1779720313376"></a>
+
 [![Latest release](https://img.shields.io/github/v/release/darrylmorley/whatcable)](https://github.com/darrylmorley/whatcable/releases/latest)
 [![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-blue)](https://github.com/darrylmorley/whatcable)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -43,11 +45,12 @@ Click the **gear icon** in the popover header to open Settings, where you can:
 - Launch at login
 - Run as a regular Dock app instead of a menu bar icon
 - Adjust the font size
-- Switch language (English, Armenian, Italian, Polish, Simplified Chinese, or follow your system default)
+- Show technical details (the same raw IOKit data that ⌥-click reveals)
+- Switch language (English, Armenian, Brazilian Portuguese, French, German, Hindi, Italian, Japanese, Latvian, Norwegian, Polish, Russian, Simplified Chinese, Traditional Chinese, or follow your system default)
 - Get notifications when cables are connected or disconnected
 - Contribute anonymised port and power diagnostics to improve hardware coverage (opt-in, manual)
 
-Right-click the menu bar icon for **Refresh**, a **Keep window open** toggle (handy for screenshots and demos), **Check for Updates…**, **About**, **WhatCable on GitHub**, and **Quit**.
+Right-click the menu bar icon for **Refresh**, a **Keep window open** toggle (handy for screenshots and demos), **Settings…**, **Contribute Diagnostic Data…**, **Check for Updates…**, **About**, **WhatCable on GitHub**, and **Quit**.
 
 ## WhatCable Pro
 
@@ -88,6 +91,17 @@ brew install --cask whatcable
 
 This installs the menu bar app and symlinks the `whatcable` CLI into your PATH.
 
+### Homebrew, CLI only (no menu bar app)
+
+If you don't want the menu bar app, install just the command-line tool:
+
+```bash
+brew tap darrylmorley/whatcable
+brew install whatcable-cli
+```
+
+Same signed and notarised binary, packaged on its own. Useful in terminal-only or scripting environments. Pick one of the two Homebrew installs (both ship the same `whatcable` binary).
+
 ## Command-line interface
 
 A `whatcable` binary ships alongside the menu bar app, driven by the same diagnostic engine:
@@ -115,9 +129,24 @@ whatcable --watch        # stream updates as cables come and go (Ctrl+C to exit)
 whatcable --raw          # include underlying IOKit properties
 whatcable --report       # open a pre-filled GitHub issue for the connected cable
 whatcable --test-kit     # run diagnostic probes and submit anonymised data
+whatcable --desktop      # launch the GUI app in Dock mode
+whatcable --popover      # launch the GUI app in menu bar mode
 whatcable --version
 whatcable --help
 ```
+
+Pro from the command line:
+
+```bash
+whatcable --monitor                        # Pro: live power telemetry (Ctrl+C to exit)
+whatcable --monitor-json                   # Pro: live power telemetry as newline-delimited JSON
+whatcable --activate XXXX-XXXX-XXXX-XXXX   # validate and store a Pro licence
+whatcable --licence                        # show current licence status
+whatcable --deactivate                     # remove the stored licence
+whatcable --pro                            # show Pro features, open purchase page
+```
+
+The CLI prints a one-line Pro hint at the end of plain text output for unlicensed users. Run `whatcable --silence-pro-hints` to hide it (or `--show-pro-hints` to bring it back). Suppressed automatically when output is piped, redirected, or used with `--json`.
 
 If you installed the `.app` manually rather than via Homebrew, the CLI lives at `WhatCable.app/Contents/Helpers/whatcable`. Symlink it into your PATH if you want it on the shell:
 
@@ -202,7 +231,7 @@ cp .env.example .env
 
 - **Cable e-marker info only appears for cables that carry one.** Most USB-C cables under 60 W are unmarked. Any Thunderbolt / USB4 cable, any 5 A / 100 W+ cable, and most quality data cables will be e-marked.
 - **Some cables only reveal their e-marker once something is plugged in at the other end.** The chip in the cable's plug runs off VCONN (a small power rail your Mac feeds into the cable) and only answers when the host issues a "Discover Identity" message. With nothing attached, some Macs read the e-marker straight away, others wait until they see a real partner to negotiate with. If a cable shows up as basic when bare, plug a charger, dock, or device into the far end and check again.
-- **WhatCable trusts the e-marker for capabilities.** Cable speed, current rating, and vendor come straight from the chip in the cable's plug, and software cannot verify what's inside the jacket. If a cable claims 240W / 40 Gbps but performs poorly, the chip is lying, not WhatCable. The trust-signals card flags a small set of internal-consistency tells (zero VID, reserved bit patterns in the Cable VDO, a VID not in the USB-IF list) that often appear on counterfeit or mis-flashed cables, but those flags are hedged signals, not proof.
+- **WhatCable reads from the Mac's USB-C port, the connected device or charger, and the cable itself.** It cross-checks what each part of the chain reports, so if a cable claims high specs but the negotiated result is lower, you'll see where the mismatch is. That said, software cannot verify what's physically inside the jacket. If a cable's e-marker chip claims 240W / 40 Gbps but the wiring can't deliver, the chip is lying, not WhatCable. The trust-signals card flags a small set of internal-consistency tells (zero VID, reserved bit patterns in the Cable VDO, a VID not in the USB-IF list). These are common in budget cables and don't necessarily mean anything is wrong. They're informational, not a verdict.
 - **PD spec coverage:** the decoder is aligned to USB-PD R3.2 V1.2 (March 2026). Earlier 3.0 / 3.1 cables work fine.
 - **Vendor name lookup uses a bundled database** (thousands of USB-IF entries plus the community usb.ids list). VIDs assigned after the bundled snapshot will show as "Unregistered / unknown" and trip a trust-signal flag until the database is refreshed.
 
@@ -231,7 +260,7 @@ Issues and PRs welcome. The code is small and tries to stay readable.
 | [`Sources/WhatCable/`](Sources/WhatCable/) | Main menu bar app UI (SwiftUI popover, settings, notifications) |
 | [`Sources/WhatCableCore/`](Sources/WhatCableCore/) | Shared diagnostic logic, PD bit decoding, text formatting |
 | [`Sources/WhatCableDarwinBackend/`](Sources/WhatCableDarwinBackend/) | IOKit watchers (port state, PD identity, power sources, USB devices, Thunderbolt fabric) |
-| [`Sources/WhatCableAppKit/`](Sources/WhatCableAppKit/) | AppKit-level window and panel management |
+| [`Sources/WhatCableAppKit/`](Sources/WhatCableAppKit/) | Plugin registry and extension points (hooks for Pro features, CLI commands, menu items) |
 | [`Sources/WhatCablePlugins/`](Sources/WhatCablePlugins/) | Pro features (power metering, licence, cable diagnostics view, liquid detection) |
 | [`Sources/WhatCableWidget/`](Sources/WhatCableWidget/) | WidgetKit extension (small/medium/large desktop widgets) |
 | [`Sources/WhatCableCLI/`](Sources/WhatCableCLI/) | CLI binary, shares Core/Backend/Plugins with the app |
@@ -270,6 +299,8 @@ Built by [Darryl Morley](https://github.com/darrylmorley).
 - [@IonBazan](https://github.com/IonBazan) - i18n migration to .lproj/.strings, Polish translation, obsolete vendor IDs
 - [@bovirus](https://github.com/bovirus) - Italian translation
 - [@Vardan933](https://github.com/Vardan933) - Armenian translation
+- [@jimmyorz](https://github.com/jimmyorz) - Traditional Chinese translation
+- [@shpokas](https://github.com/shpokas) - Latvian translation
 - [@abrauchli](https://github.com/abrauchli) - screenshot fix
 - [@durul](https://github.com/durul) - updater security audit
 - [@nervous-inhuman](https://github.com/nervous-inhuman) - USB device matching and port state bug reports
@@ -279,6 +310,9 @@ Built by [Darryl Morley](https://github.com/darrylmorley).
 - [@stevetrease](https://github.com/stevetrease) - M3 and M4 ioreg dumps, TB3 data samples
 - [@jshier](https://github.com/jshier) - M3 Ultra Thunderbolt data, AppleSmartBattery dumps
 - [@NoFr1ends](https://github.com/NoFr1ends) - TB5 hardware confirmation (JHL9580 dock, M5 Pro)
+- [@iFindProblems](https://github.com/iFindProblems) - Dock mode bug reports
+- [@NaiveTomcat](https://github.com/NaiveTomcat) - Power Monitor regression and MagSafe PD contract bug reports
+- [@pandoratactful](https://github.com/pandoratactful) - active Thunderbolt cable e-marker mismatch report
 
 **Sponsors:**
 - [@1A1zRyan](https://github.com/1A1zRyan)

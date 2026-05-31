@@ -127,11 +127,13 @@
     font-size: 20px;
     font-weight: 700;
     margin: 32px 0 12px;
+    scroll-margin-top: 80px;
   }
   h3 {
     font-size: 17px;
     font-weight: 700;
     margin: 24px 0 10px;
+    scroll-margin-top: 80px;
   }
   p {
     margin: 0 0 14px;
@@ -156,6 +158,52 @@
     border: none;
     border-top: 1px solid var(--line);
     margin: 32px 0;
+  }
+
+  /* Scrollable wrapper injected by the Eleventy wrapTables transform. */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 0 20px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .table-wrap table { margin: 0; border: none; border-radius: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    margin: 0 0 20px;
+  }
+  thead tr {
+    background: var(--line-soft);
+    border-bottom: 2px solid var(--line);
+  }
+  th {
+    text-align: left;
+    padding: 9px 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-soft);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--line-soft); }
+
+  /* Images in post body: markdown renders bare <img> not <figure>, so scope
+     the size constraint and chrome here rather than relying on figure img. */
+  .post-body img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    margin: 20px auto;
   }
 
   figure { margin: 20px 0; }
@@ -194,6 +242,51 @@
     vertical-align: middle;
     margin-left: 4px;
   }
+
+  .faq-section {
+    margin-top: 40px;
+  }
+  .faq-section h2 {
+    margin-bottom: 16px;
+  }
+  .faq-item {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .faq-item > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 14px 18px;
+    font-weight: 600;
+    color: var(--ink);
+    position: relative;
+    padding-right: 44px;
+  }
+  .faq-item > summary::-webkit-details-marker { display: none; }
+  .faq-item > summary::after {
+    content: "+";
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: var(--muted);
+    transition: transform 0.15s ease;
+  }
+  .faq-item[open] > summary::after {
+    content: "−";
+  }
+  .faq-item > summary:hover {
+    background: var(--line-soft);
+  }
+  .faq-answer {
+    padding: 0 18px 14px;
+    color: var(--ink-soft);
+  }
+  .faq-answer > :last-child { margin-bottom: 0; }
 
   footer {
     padding: 32px 0;

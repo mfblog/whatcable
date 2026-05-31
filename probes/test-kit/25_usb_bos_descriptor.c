@@ -3,16 +3,36 @@
  * IOUSBHostDevice services. Cables with USB4 routers or Billboard devices
  * expose capability descriptors in userland without entitlements.
  *
- * Compile: clang -framework IOKit -framework CoreFoundation -o 25_usb_bos_descriptor 25_usb_bos_descriptor.c
+ * Two stages:
+ *   1. Dump IOKit-published properties whose keys look BOS/Billboard/USB4-ish.
+ *   2. Open the device via the legacy IOUSBDeviceInterface (IOCFPlugIn) and
+ *      issue a USB control transfer GET_DESCRIPTOR(BOS) to fetch the raw
+ *      capability bytes. Parses common device capability descriptors:
+ *      USB 2.0 Extension, SuperSpeed, SuperSpeedPlus, Container ID,
+ *      Platform, Billboard, Configuration Summary, etc.
+ *
+ * The legacy IOUSBDeviceInterface path works without DriverKit / USB
+ * entitlements on macOS as long as no kernel driver has exclusive-opened
+ * the device. Mass-storage and HID devices are usually claimed; raw cables,
+ * docks in pass-through, and Billboard devices typically are not.
+ *
+ * Compile:
+ *   clang -framework IOKit -framework CoreFoundation \
+ *     -o 25_usb_bos_descriptor 25_usb_bos_descriptor.c
  */
 
 #include <IOKit/IOKitLib.h>
+#include <IOKit/IOCFPlugIn.h>
 #include <IOKit/usb/IOUSBLib.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <mach/mach.h>
+
+#ifndef kUSBBOSDescriptor
+#define kUSBBOSDescriptor 0x0F
+#endif
 
 static void printCFType(CFTypeRef value, int indent) {
     char pad[64] = {0};
@@ -63,6 +83,234 @@ static void printCFType(CFTypeRef value, int indent) {
     } else {
         printf("%s<unknown CF type %lu>\n", pad, (unsigned long)tid);
     }
+}
+
+static const char *capabilityName(UInt8 capType) {
+    switch (capType) {
+        case 0x01: return "Wireless USB";
+        case 0x02: return "USB 2.0 Extension";
+        case 0x03: return "SuperSpeed USB";
+        case 0x04: return "Container ID";
+        case 0x05: return "Platform";
+        case 0x06: return "Power Delivery";
+        case 0x07: return "Battery Info";
+        case 0x08: return "PD Consumer Port";
+        case 0x09: return "PD Provider Port";
+        case 0x0a: return "SuperSpeedPlus";
+        case 0x0b: return "Precision Time Measurement";
+        case 0x0c: return "Wireless USB Ext";
+        case 0x0d: return "Billboard";
+        case 0x0e: return "Authentication";
+        case 0x0f: return "Billboard Alternate Mode";
+        case 0x10: return "Configuration Summary";
+        case 0x11: return "USB4 Capability";
+        default:   return "unknown";
+    }
+}
+
+static void hexDump(const UInt8 *buf, int len, const char *pad) {
+    for (int i = 0; i < len; i++) {
+        if ((i % 16) == 0) printf("%s", pad);
+        printf("%02x ", buf[i]);
+        if ((i % 16) == 15) printf("\n");
+    }
+    if (len % 16) printf("\n");
+}
+
+static void parseSuperSpeed(const UInt8 *cap, UInt8 len) {
+    if (len < 10) { printf("    (SS cap too short)\n"); return; }
+    UInt16 speeds = cap[4] | (cap[5] << 8);
+    UInt8 fnSupport = cap[6];
+    UInt8 u1Exit = cap[7];
+    UInt16 u2Exit = cap[8] | (cap[9] << 8);
+    printf("    SpeedsSupported=0x%04x", speeds);
+    if (speeds & (1 << 0)) printf(" LowSpeed");
+    if (speeds & (1 << 1)) printf(" FullSpeed");
+    if (speeds & (1 << 2)) printf(" HighSpeed");
+    if (speeds & (1 << 3)) printf(" SuperSpeed");
+    printf("\n");
+    printf("    LowestFunctionalSpeed=%u U1DevExitLatency=%uus U2DevExitLatency=%uus\n",
+           fnSupport, u1Exit, u2Exit);
+}
+
+static void parseSuperSpeedPlus(const UInt8 *cap, UInt8 len) {
+    if (len < 12) { printf("    (SSPlus cap too short)\n"); return; }
+    UInt32 attribs = cap[4] | (cap[5] << 8) | (cap[6] << 16) | (cap[7] << 24);
+    UInt16 functional = cap[8] | (cap[9] << 8);
+    UInt8 ssac = attribs & 0x1F;
+    UInt8 ssic = (attribs >> 5) & 0x0F;
+    UInt8 minRxLanes = functional & 0x0F;
+    UInt8 minTxLanes = (functional >> 4) & 0x0F;
+    printf("    SublinkSpeedAttribCount=%u (+1 entries) SublinkSpeedIDCount=%u\n",
+           ssac, ssic);
+    printf("    MinRxLanes=%u MinTxLanes=%u\n", minRxLanes, minTxLanes);
+    int entries = ssac + 1;
+    static const char *units[] = {"bps", "Kbps", "Mbps", "Gbps"};
+    for (int s = 0; s < entries; s++) {
+        int off = 12 + s * 4;
+        if (off + 4 > len) break;
+        UInt32 sl = cap[off] | (cap[off+1] << 8) | (cap[off+2] << 16) | (cap[off+3] << 24);
+        UInt8 sid = sl & 0x0F;
+        UInt8 lse = (sl >> 4) & 0x03;
+        UInt8 st  = (sl >> 6) & 0x03;
+        UInt8 dir = (sl >> 7) & 0x01;
+        UInt8 prot = (sl >> 14) & 0x03;
+        UInt16 mant = (sl >> 16) & 0xFFFF;
+        printf("    SL[%d]: ID=%u dir=%c protocol=%s mantissa=%u exp=%s lane-count-encoded=%u\n",
+               s, sid,
+               dir ? 'T' : 'R',
+               (prot == 0) ? "SuperSpeed" : (prot == 1) ? "SuperSpeedPlus" : "reserved",
+               mant,
+               units[lse],
+               st);
+    }
+}
+
+static void parseContainerID(const UInt8 *cap, UInt8 len) {
+    if (len < 20) { printf("    (Container ID cap too short)\n"); return; }
+    printf("    UUID: ");
+    for (int i = 4; i < 20; i++) {
+        printf("%02x", cap[i]);
+        if (i == 7 || i == 9 || i == 11 || i == 13) printf("-");
+    }
+    printf("\n");
+}
+
+static void parseBillboard(const UInt8 *cap, UInt8 len) {
+    /* Need 11 bytes: nAltModes@4, iAddlInfo@5, preferred@6, vconnPower@7..10. */
+    if (len < 11) { printf("    (Billboard cap too short)\n"); return; }
+    UInt8 nAltModes = cap[4];
+    UInt8 iAddlInfo = cap[5];
+    UInt8 preferred = cap[6];
+    UInt32 vconnPower = cap[7] | (cap[8] << 8) | (cap[9] << 16) | (cap[10] << 24);
+    printf("    NumberOfAlternateModes=%u iAddlInfoURL=%u PreferredAltMode=%u VconnPower=0x%08x\n",
+           nAltModes, iAddlInfo, preferred, vconnPower);
+}
+
+static void parseUSB4(const UInt8 *cap, UInt8 len) {
+    /* Need 7 bytes: bmAttributes@4, bcdUSBVersion at @5..@6 (little-endian). */
+    if (len < 7) { printf("    (USB4 cap too short)\n"); return; }
+    printf("    bmAttributes=0x%02x bcdUSBVersion=0x%02x%02x\n",
+           cap[4], cap[6], cap[5]);
+}
+
+static void fetchBOSDescriptor(io_service_t service) {
+    IOCFPlugInInterface **plugIn = NULL;
+    SInt32 score = 0;
+    kern_return_t kr = IOCreatePlugInInterfaceForService(service,
+        kIOUSBDeviceUserClientTypeID, kIOCFPlugInInterfaceID,
+        &plugIn, &score);
+    if (kr != KERN_SUCCESS || !plugIn) {
+        printf("  [BOS] IOCreatePlugInInterfaceForService failed: 0x%x\n", kr);
+        return;
+    }
+
+    IOUSBDeviceInterface **dev = NULL;
+    HRESULT hr = (*plugIn)->QueryInterface(plugIn,
+        CFUUIDGetUUIDBytes(kIOUSBDeviceInterfaceID),
+        (LPVOID *)&dev);
+    IODestroyPlugInInterface(plugIn);
+    if (hr || !dev) {
+        printf("  [BOS] QueryInterface(IOUSBDeviceInterface) failed: 0x%lx\n", (long)hr);
+        return;
+    }
+
+    int opened = 0;
+    kr = (*dev)->USBDeviceOpen(dev);
+    if (kr == kIOReturnSuccess) {
+        opened = 1;
+    } else {
+        printf("  [BOS] USBDeviceOpen failed: 0x%x (trying control xfer without open)\n", kr);
+    }
+
+    /* Stage A: fetch BOS descriptor header (5 bytes) to learn wTotalLength. */
+    UInt8 header[5] = {0};
+    IOUSBDevRequest req;
+    memset(&req, 0, sizeof(req));
+    req.bmRequestType = USBmakebmRequestType(kUSBIn, kUSBStandard, kUSBDevice);
+    req.bRequest      = kUSBRqGetDescriptor;
+    req.wValue        = (kUSBBOSDescriptor << 8) | 0;
+    req.wIndex        = 0;
+    req.wLength       = sizeof(header);
+    req.pData         = header;
+
+    kr = (*dev)->DeviceRequest(dev, &req);
+    if (kr != kIOReturnSuccess) {
+        printf("  [BOS] GET_DESCRIPTOR(BOS, 5) failed: 0x%x\n", kr);
+        goto done;
+    }
+    if (header[1] != 0x0F) {
+        printf("  [BOS] Header bDescriptorType=0x%02x, expected 0x0F. Device has no BOS.\n",
+               header[1]);
+        goto done;
+    }
+
+    UInt16 total = header[2] | (header[3] << 8);
+    UInt8 numCaps = header[4];
+    printf("  [BOS] Header OK: wTotalLength=%u bNumDeviceCaps=%u\n", total, numCaps);
+
+    if (total < 5 || total > 4096) {
+        printf("  [BOS] wTotalLength=%u outside sane range; aborting\n", total);
+        goto done;
+    }
+
+    /* Stage B: fetch the full BOS descriptor. */
+    UInt8 *buf = calloc(1, total);
+    if (!buf) goto done;
+    req.wLength = total;
+    req.pData   = buf;
+    kr = (*dev)->DeviceRequest(dev, &req);
+    if (kr != kIOReturnSuccess) {
+        printf("  [BOS] GET_DESCRIPTOR(BOS, %u) failed: 0x%x\n", total, kr);
+        free(buf);
+        goto done;
+    }
+    printf("  [BOS] Full descriptor bytes (%u):\n", total);
+    hexDump(buf, total, "    ");
+
+    /* Walk capability descriptors. */
+    int offset = 5;
+    int idx = 0;
+    while (offset + 3 <= total) {
+        UInt8 capLen  = buf[offset];
+        UInt8 dtype   = buf[offset + 1];
+        UInt8 capType = buf[offset + 2];
+        if (capLen < 3 || offset + capLen > total) {
+            printf("  [BOS cap %d] truncated (len=%u at offset=%d)\n", idx, capLen, offset);
+            break;
+        }
+        if (dtype != 0x10) {
+            printf("  [BOS cap %d] unexpected bDescriptorType=0x%02x; skipping\n", idx, dtype);
+            offset += capLen;
+            idx++;
+            continue;
+        }
+        printf("  [BOS cap %d] type=0x%02x (%s) len=%u\n",
+               idx, capType, capabilityName(capType), capLen);
+        const UInt8 *cap = buf + offset;
+        switch (capType) {
+            case 0x03: parseSuperSpeed(cap, capLen); break;
+            case 0x0a: parseSuperSpeedPlus(cap, capLen); break;
+            case 0x04: parseContainerID(cap, capLen); break;
+            case 0x0d: parseBillboard(cap, capLen); break;
+            case 0x11: parseUSB4(cap, capLen); break;
+            default:
+                if (capLen > 3) {
+                    printf("    payload: ");
+                    for (int i = 3; i < capLen; i++) printf("%02x ", cap[i]);
+                    printf("\n");
+                }
+                break;
+        }
+        offset += capLen;
+        idx++;
+    }
+
+    free(buf);
+
+done:
+    if (opened) (*dev)->USBDeviceClose(dev);
+    (*dev)->Release(dev);
 }
 
 static void dumpServiceProperties(io_service_t service, const char *label) {
@@ -117,26 +365,8 @@ static void dumpServiceProperties(io_service_t service, const char *label) {
     }
     free(keys); free(vals);
 
-    // Try to open user client and get device descriptor
-    io_connect_t conn;
-    kr = IOServiceOpen(service, mach_task_self(), 0, &conn);
-    if (kr == KERN_SUCCESS) {
-        printf("  [OPEN] User client opened successfully (type=0)\n");
-
-        // Try GetDeviceDescriptor (selector varies)
-        uint64_t output[32];
-        uint32_t outputCnt = 32;
-        for (uint32_t sel = 0; sel < 10; sel++) {
-            kr = IOConnectCallScalarMethod(conn, sel, NULL, 0, output, &outputCnt);
-            if (kr == KERN_SUCCESS) {
-                printf("  [METHOD] selector %u returned success, output[0]=0x%llx\n", sel, output[0]);
-            }
-            outputCnt = 32;
-        }
-        IOServiceClose(conn);
-    } else {
-        printf("  [OPEN] Failed: 0x%x\n", kr);
-    }
+    // Stage 2: actually fetch the BOS descriptor via control transfer.
+    fetchBOSDescriptor(service);
 
     CFRelease(props);
 }
@@ -191,25 +421,46 @@ int main(void) {
         }
     }
 
-    // Look for Billboard class
+    // Look for Billboard class. The class macOS instantiates on Apple Silicon
+    // is "AppleUSBHostBillboardDevice"; the older "IOUSBHostBillboardDevice"
+    // name matches nothing here, which is why earlier runs reported 0. We try
+    // both so the probe works regardless of macOS naming. dumpServiceProperties
+    // already prints bDeviceClass, the spec-defined Billboard class (0x11),
+    // which we want to confirm against live hardware.
     printf("\n=== Billboard devices ===\n");
-    kr = IOServiceGetMatchingServices(kIOMainPortDefault,
-        IOServiceMatching("IOUSBHostBillboardDevice"), &iter);
-    if (kr == KERN_SUCCESS) {
+    const char *billboardClasses[] = {"AppleUSBHostBillboardDevice", "IOUSBHostBillboardDevice"};
+    int billboardCount = 0;
+    uint64_t seenIDs[64];
+    int seenCount = 0;
+    for (size_t bc = 0; bc < sizeof(billboardClasses) / sizeof(billboardClasses[0]); bc++) {
+        kr = IOServiceGetMatchingServices(kIOMainPortDefault,
+            IOServiceMatching(billboardClasses[bc]), &iter);
+        if (kr != KERN_SUCCESS) continue;
         io_service_t svc;
-        int count = 0;
         while ((svc = IOIteratorNext(iter)) != 0) {
-            char label[256];
-            snprintf(label, sizeof(label), "Billboard[%d]", count);
-            dumpServiceProperties(svc, label);
+            // Class matching includes subclasses, so if AppleUSBHostBillboardDevice
+            // is a subclass of IOUSBHostBillboardDevice the two iterators can return
+            // the same service. Dedupe by registry entry ID before counting/dumping.
+            uint64_t entryID = 0;
+            IORegistryEntryGetRegistryEntryID(svc, &entryID);
+            int alreadySeen = 0;
+            for (int s = 0; s < seenCount; s++) {
+                if (seenIDs[s] == entryID) { alreadySeen = 1; break; }
+            }
+            if (!alreadySeen) {
+                if (seenCount < (int)(sizeof(seenIDs) / sizeof(seenIDs[0]))) {
+                    seenIDs[seenCount++] = entryID;
+                }
+                char label[256];
+                snprintf(label, sizeof(label), "Billboard[%d] (%s)", billboardCount, billboardClasses[bc]);
+                dumpServiceProperties(svc, label);
+                billboardCount++;
+            }
             IOObjectRelease(svc);
-            count++;
         }
         IOObjectRelease(iter);
-        printf("  Found %d billboard devices\n", count);
-    } else {
-        printf("  No IOUSBHostBillboardDevice class found\n");
     }
+    printf("  Found %d billboard devices\n", billboardCount);
 
     return 0;
 }

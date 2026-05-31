@@ -79,7 +79,7 @@ struct PDVDOTests {
         #expect(cable.decodeWarnings.isEmpty)
     }
 
-    @Test("EPR cable 50V 5A")
+    @Test("EPR cable 50V 5A reports the 240W deliverable, not a 250W multiply")
     func eprCable_50V_5A() {
         // speed=4 (USB4 Gen4 / 80 Gbps), current=2 (5A), maxV=3 (50V)
         let vdo: UInt32 = 0b100 | (2 << 5) | (3 << 9) | Self.validLatency
@@ -87,9 +87,25 @@ struct PDVDOTests {
         #expect(cable.speed == .usb4Gen4)
         #expect(cable.current == .fiveAmp)
         #expect(cable.maxVoltageEncoded == 3)
+        // The rating field still reads 50V (that's a true property of the cable).
         #expect(cable.maxVolts == 50)
-        #expect(cable.maxWatts == 250) // 50V * 5A - EPR cable
+        // But power is clamped to USB-PD's 48V ceiling: 48 * 5 = 240, not 250.
+        // 50V is insulation headroom the spec never delivers against.
+        #expect(cable.maxWatts == 240)
         #expect(cable.decodeWarnings.isEmpty)
+    }
+
+    @Test("30V and 40V cables are not clamped: adjustable voltage reaches them")
+    func subEPRVoltages_notClamped() {
+        // 30V/5A cable: 30 is below the 48V ceiling, so power is the real
+        // 30 * 5 = 150W. Clamping must not touch this case.
+        let cable30 = PDVDO.decodeCableVDO(0b100 | (2 << 5) | (1 << 9) | Self.validLatency, isActive: false)
+        #expect(cable30.maxVolts == 30)
+        #expect(cable30.maxWatts == 150)
+        // 40V/5A cable: 40 * 5 = 200W, also unchanged.
+        let cable40 = PDVDO.decodeCableVDO(0b100 | (2 << 5) | (2 << 9) | Self.validLatency, isActive: false)
+        #expect(cable40.maxVolts == 40)
+        #expect(cable40.maxWatts == 200)
     }
 
     @Test("Active cable type detection")
